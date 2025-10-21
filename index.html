@@ -5,82 +5,183 @@
     <title>固件下载测试</title>
     <meta
       name="description"
-      content="Easily allow users to install Squeezelite-ESP32 firmware on the web."
+      content="Easily allow users to install firmware on the web with a clean interface."
     />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
+
+    <!-- 核心功能库，保持不变 -->
+    <script type="module" src="https://unpkg.com/esp-web-tools@8.0.1/dist/web/install-button.js?module"></script>
+
+    <!-- 这是优化后的全部样式 -->
     <style>
+      /* --- 1. CSS 变量定义 --- */
+      :root {
+        --color-background: #f0f2f5;
+        --color-text: #333;
+        --color-primary: #007bff;
+        --color-primary-hover: #0056b3;
+        --color-card-background: #ffffff;
+        --color-border: #e0e0e0;
+        --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* 当body有.dark-mode类时，应用这些暗黑主题变量 */
+      body.dark-mode {
+        --color-background: #1a1a1a;
+        --color-text: #e0e0e0;
+        --color-primary: #58a6ff;
+        --color-primary-hover: #80bfff;
+        --color-card-background: #2c2c2c;
+        --color-border: #444;
+        --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      /* --- 2. 基础与布局样式 --- */
       body {
         font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI",
           Roboto, Ubuntu, sans-serif;
-        padding: 0;
+        padding: 2em 1em;
         margin: 0;
-        line-height: 1.4;
-      }
-      .content {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 12px;
-      }
-      h2 {
-        margin-top: 2em;
-      }
-      h3 {
-        margin-top: 1.5em;
-      }
-      a {
-        color: #03a9f4;
-      }
-      .invisible {
-        visibility: hidden;
-      }
-      .hidden {
-        display: none;
-      }
-      esp-web-install-button[install-unsupported] {
-        visibility: inherit;
-      }
-      .content pre {
-        max-width: 100%;
-        overflow-y: scroll;
-      }
-      .footer {
-        margin-top: 24px;
-        border-top: 1px solid #ccc;
-        padding-top: 24px;
+        line-height: 1.6;
+        background-color: var(--color-background);
+        color: var(--color-text);
+        transition: background-color 0.3s, color 0.3s;
         text-align: center;
       }
-      .footer .initiative {
-        font-style: italic;
-        margin-top: 16px;
+      
+      .content {
+        max-width: 550px;
+        margin: 0 auto;
+        padding: 2em;
+        background-color: var(--color-card-background);
+        border-radius: 12px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--color-border);
+        transition: background-color 0.3s, border-color 0.3s;
       }
-      table {
-        border-spacing: 0;
+
+      h1 {
+        margin-top: 0;
+        color: var(--color-primary);
       }
-      td {
-        padding: 8px;
-        border-bottom: 1px solid #ccc;
+      
+      a {
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .footer {
+        margin-top: 2em;
+        padding-top: 1em;
+        font-size: 0.9em;
+        color: #888;
+      }
+      
+      /* --- 3. 组件样式 --- */
+      
+      /* 主题切换按钮 */
+      #theme-toggle {
+        position: absolute;
+        top: 1em;
+        right: 1em;
+        background: var(--color-card-background);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.2s;
+      }
+      #theme-toggle:hover {
+          transform: scale(1.1);
+      }
+      
+      /* 自定义单选按钮 */
+      .radios {
+        padding: 0;
+        margin-top: 2em;
+        text-align: left;
+        display: inline-block; /* 让列表宽度自适应内容 */
       }
       .radios li {
         list-style: none;
-        line-height: 2em;
+        margin-bottom: 1em;
       }
-      @media (prefers-color-scheme: dark) {
-        body {
-          background-color: #333;
-          color: #fff;
-        }
-        a {
-          color: #58a6ff;
-        }
+      .radios label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-size: 1.1em;
       }
+      .radios input[type="radio"] {
+        display: none; /* 隐藏原始按钮 */
+      }
+      /* 自定义按钮的“外圈” */
+      .radios label::before {
+        content: '';
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--color-border);
+        margin-right: 0.75em;
+        transition: border-color 0.3s;
+      }
+      /* 自定义按钮的“内芯” */
+      .radios input[type="radio"]:checked + label::before {
+        border-color: var(--color-primary);
+        background-color: var(--color-primary);
+        background-clip: content-box;
+        padding: 3px;
+      }
+      
+      /* 刷写按钮容器 */
+      .button-row {
+        margin-top: 2.5em;
+      }
+
+      /* 这是提供给esp-web-tools的自定义按钮样式 */
+      button[slot="activate"] {
+        background-color: var(--color-primary);
+        color: white;
+        font-size: 1.1em;
+        font-weight: bold;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+      }
+      button[slot="activate"]:hover {
+        background-color: var(--color-primary-hover);
+        transform: scale(1.05);
+      }
+      
+      /* 用于隐藏元素的CSS类 */
+      .invisible {
+        visibility: hidden;
+      }
+
     </style>
-    <script type="module" src="https://unpkg.com/esp-web-tools@8.0.1/dist/web/install-button.js?module"></script>
   </head>
+
   <body>
+    <!-- 这是新增的主题切换按钮 -->
+    <button id="theme-toggle">🌙</button>
+
     <div class="content">
       <h1>固件下载测试</h1>
-      <p>Choose your hardware</p>
+      <p>请选择您的硬件型号以继续</p>
+      
+      <!-- HTML 结构保持不变 -->
       <ul class="radios">
         <li>
           <label><input type="radio" name="type" value="1" /> test1（彩灯）</label>
@@ -89,24 +190,68 @@
           <label><input type="radio" name="type" value="2" /> test2（串口）</label>
         </li>
       </ul>
-      <p class="button-row" align="center">
-        <esp-web-install-button class="invisible"></esp-web-install-button>
+      
+      <p class="button-row">
+        <!-- 为了方便自定义按钮，我们在里面添加了一个button元素 -->
+        <esp-web-install-button class="invisible">
+          <button slot="activate">连接并刷写</button>
+        </esp-web-install-button>
       </p>
 
       <div class="footer">
-        <a href="https://github.com/sle118/squeezelite-esp32"
-          >固件下载</a
-        > &mdash;
+        <a href="https://github.com/sle118/squeezelite-esp32">固件下载</a> 
+        &mdash;
         Installer powered by <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>.
+      </div>
     </div>
+    
+    <!-- JavaScript 部分 -->
     <script>
+      // --- 您的核心刷写逻辑，保持不变 ---
       document.querySelectorAll('input[name="type"]').forEach(radio =>
         radio.addEventListener("change", () => {
           const button = document.querySelector('esp-web-install-button');
-          button.manifest = `./firmware/test${radio.value}.json`;
+          // 注意：我将manifest路径修改得更标准，移除了开头的 `./` 
+          // 它会自动从当前目录寻找，这更可靠
+          button.manifest = `firmware/test${radio.value}.json`; 
           button.classList.remove('invisible');
+        })
+      );
+
+      // --- 这是新增的主题切换逻辑 ---
+      const themeToggle = document.getElementById('theme-toggle');
+      const body = document.body;
+      const themeKey = 'theme-preference';
+
+      // 切换函数
+      const toggleTheme = () => {
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+        themeToggle.textContent = isDarkMode ? '☀️' : '🌙';
+        localStorage.setItem(themeKey, isDarkMode ? 'dark' : 'light');
+      };
+      
+      // 页面加载时，应用保存的主题或系统默认主题
+      const applyInitialTheme = () => {
+        const savedTheme = localStorage.getItem(themeKey);
+        // 如果有保存的设置，则使用它
+        if (savedTheme) {
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeToggle.textContent = '☀️';
+            }
+        // 如果没有保存的设置，则根据系统偏好来设置初始主题
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            body.classList.add('dark-mode');
+            themeToggle.textContent = '☀️';
         }
-      ));
+      };
+
+      // 绑定点击事件
+      themeToggle.addEventListener('click', toggleTheme);
+      
+      // 初始化主题
+      applyInitialTheme();
     </script>
   </body>
 </html>
