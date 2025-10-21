@@ -105,66 +105,52 @@
           transform: scale(1.1);
       }
       
-      /* 自定义单选按钮 */
+      /* --- [这是新的、更可靠的单选按钮样式] --- */
+
       .radios {
         padding: 0;
         margin-top: 2em;
         text-align: left;
-        display: inline-block; /* 让列表宽度自适应内容 */
+        display: inline-block;
       }
       .radios li {
         list-style: none;
         margin-bottom: 1em;
       }
-      /* 自定义单选按钮 */
       .radios label {
         display: flex;
         align-items: center;
         cursor: pointer;
         font-size: 1.1em;
-        position: relative; /* 添加相对定位，为内芯做准备 */
       }
       .radios input[type="radio"] {
-        display: none; /* 隐藏原始按钮 */
+        display: none; /* 隐藏原始的单选按钮 */
       }
 
-      /* 自定义按钮的“外圈” */
+      /* 用 ::before 伪元素画出我们的自定义按钮“外圈” */
       .radios label::before {
         content: '';
         width: 20px;
         height: 20px;
+        box-sizing: border-box; /* 确保边框宽度不影响总尺寸 */
         border-radius: 50%;
         border: 2px solid var(--color-border);
         margin-right: 0.75em;
-        transition: border-color 0.3s;
-        box-sizing: border-box; /* 确保边框宽度不影响总尺寸 */
+        transition: border-color 0.2s;
       }
 
-      /* 当选中时，改变外圈颜色 */
+      /* 【核心逻辑】当单选按钮被选中时，执行以下操作 */
       .radios input[type="radio"]:checked + label::before {
+        /* 1. 将外圈的边框颜色变成主题色 */
         border-color: var(--color-primary);
-      }
 
-      /* 这是新的“内芯”，一开始是看不见的 */
-      .radios label::after {
-        content: '';
-        position: absolute; /* 绝对定位，让它能叠加在外圈里 */
-        left: 5px; /* (外圈宽度20px + 边框2px*2)/2 - 内芯宽度10px/2 = 5px (近似值) */
-        top: 50%;
-        margin-top: -5px; /* 垂直居中 */
-        
-        width: 10px;
-        height: 10px;
-        background-color: var(--color-primary);
-        border-radius: 50%;
-        
-        transform: scale(0); /* 一开始缩放到0，完全隐藏 */
-        transition: transform 0.2s ease-in-out;
-      }
-      
-      /* 当选中时，让“内芯”动画般地出现 */
-      .radios input[type="radio"]:checked + label::after {
-        transform: scale(1); /* 动画地放大到100%尺寸 */
+        /* 2. 使用径向渐变背景画出内芯！ */
+        /* 这行代码的意思是：画一个圆形的、中心是主题色的渐变，
+           其中半径 0%到50% 的区域是实心的主题色，
+           半径 51% 到 100% 的区域是完全透明的。
+           效果上就等于画了一个占50%大小的实心圆点。
+        */
+        background: radial-gradient(circle, var(--color-primary) 50%, transparent 51%);
       }
       
       /* 刷写按钮容器 */
