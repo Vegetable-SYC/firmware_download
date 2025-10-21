@@ -8,7 +8,7 @@
       "parts": [
         { "path": "test2/bootloader.bin", "offset": 4096 },
         { "path": "test2/partitions.bin", "offset": 32768 },
-		{ "path": "test2/firmware.bin", "offset": 65536 },
+		{ "path": "test2/firmware.bin", "offset": 65536 }
       ]
     }
   ]
