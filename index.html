@@ -29,7 +29,7 @@
 
       /* 当body有.dark-mode类时，应用这些暗黑主题变量 */
       body.dark-mode {
-		--Checkbox: #ffffff;
+		--Checkbox: #000000;
         --color-background: #1a1a1a;
         --color-text: #e0e0e0;
         --color-primary: #58a6ff;
@@ -107,54 +107,54 @@
           transform: scale(1.1);
       }
       
-      /* --- [这是新的、更可靠的单选按钮样式] --- */
+      /* --- [最终修正版：使用 box-shadow 绘制内芯，最清晰可靠] --- */
 
-      /* --- [最终修正版：解决了暗黑模式对比度问题的单选按钮样式] --- */
-
-      .radios {
-        padding: 0;
-        margin-top: 2em;
-        text-align: left;
-        display: inline-block;
-      }
-      .radios li {
-        list-style: none;
-        margin-bottom: 1em;
-      }
-      .radios label {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        font-size: 1.1em;
-      }
-      .radios input[type="radio"] {
-        display: none; /* 隐藏原始的单选按钮 */
-      }
-
-      /* 用 ::before 伪元素画出我们的自定义按钮“外圈” */
+	  .radios {
+	    padding: 0;
+	    margin-top: 2em;
+	    text-align: left;
+	    display: inline-block;
+	  }
+	  .radios li {
+	    list-style: none;
+	    margin-bottom: 1em;
+	  }
+	  .radios label {
+	    display: flex;
+	    align-items: center;
+	    cursor: pointer;
+	    font-size: 1.1em;
+	  }
+	  .radios input[type="radio"] {
+	    display: none; /* 隐藏原始的单选按钮 */
+	  }
+	  
+	  /* 用 ::before 伪元素画出我们的自定义按钮“外圈” */
 	  .radios label::before {
 	    content: '';
 	    width: 20px;
 	    height: 20px;
-	    box-sizing: border-box;
+	    box-sizing: border-box; /* 确保边框和内边距包含在宽高内 */
 	    border-radius: 50%;
 	    border: 2px solid var(--color-border);
 	    margin-right: 0.75em;
 	    
-	    /* 【关键修正-1】始终为外圈提供一个独立的背景色，确保对比度 */
+	    /* 将背景设为透明或卡片背景色 */
 	    background-color: var(--color-card-background);
 	  
-	    /* 【关键修正-2】始终应用 background-clip 和 padding */
-	    background-clip: content-box; /* 让背景色只显示在 padding 内部 */
-	    padding: 3px;                 /* 预留出内芯的位置 */
-	    
-	    transition: border-color 0.2s, background-color 0.2s;
+	    /* 为动画效果做准备 */
+	    transition: border-color 0.2s, box-shadow 0.2s;
 	  }
 	  
-	  /* 当单选按钮被选中时，只需要改变颜色即可！ */
+	  /* 当单选按钮被选中时 */
 	  .radios input[type="radio"]:checked + label::before {
+	    /* 1. 将外圈的边框颜色变成主题色 */
 	    border-color: var(--color-primary);
-	    background-color: var(--Checkbox); /* 将内芯填充为主题色 */
+	  
+	    /* 2. 【关键】使用 inset box-shadow 画出内芯！ */
+	    /* 语法: inset(向内) x-偏移 y-偏移 模糊半径 扩展半径 颜色 */
+	    /* 这里的 5px 就是内芯半径，可以按需调整 */
+	    box-shadow: inset 0 0 0 5px var(--color-primary);
 	  }
       
       /* 刷写按钮容器 */
