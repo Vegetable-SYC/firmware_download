@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>固件下载测试</title>
+  <meta name="viewport" content="width=device-width" />
+  <!-- 引入 ESP Web Tools 的核心库 -->
+  <script type="module" src="https://unpkg.com/esp-web-tools@8/dist/web/install-button.js?module"></script>
+  <!-- 页面样式，模仿了你提供的截图风格 -->
+  <style>
+    body {
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 3em auto;
+      padding: 0 1em;
+      text-align: center;
+    }
+    h1 { font-size: 2em; }
+    ul { padding: 0; margin-top: 2em; text-align: left; display: inline-block; }
+    li { list-style: none; margin-bottom: 1em; font-size: 1.1em; }
+    .footer { border-top: 1px solid #ccc; margin-top: 3em; padding-top: 1em; font-size: 0.9em; color: #666; }
+    /* 这个CSS类用来在一开始隐藏刷写按钮 */
+    .invisible { display: none; }
+  </style>
+</head>
+
+<body>
+  <!-- 网页主标题 -->
+  <h1>固件下载测试</h1>
+  
+  <!-- 副标题/说明 -->
+  <p>Choose your hardware</p>
+  
+  <!-- 这是硬件选择列表 -->
+  <ul id="hardware-options">
+    <li>
+      <label>
+        <!-- 【重要】value="device_c3" 会被JS用来拼接文件名 manifest_device_c3.json -->
+        <input type="radio" name="hardware" value="1" />
+        test1（彩灯）
+      </label>
+    </li>
+    <li>
+      <label>
+        <!-- 【重要】value="device_s3" 会被JS用来拼接文件名 manifest_device_s3.json -->
+        <input type="radio" name="hardware" value="2" />
+        test2（串口）
+      </label>
+    </li>
+  </ul>
+  
+  <!-- 刷写按钮。它一开始是隐藏的。我们会在它外面再套一层div方便控制 -->
+  <div id="flasher-container" class="invisible">
+    <esp-web-install-button>
+      <button slot="activate">连接并刷写固件</button>
+    </esp-web-install-button>
+  </div>
+  
+  <!-- 网页页脚 -->
+  <div class="footer">
+    Installer powered by <a href="https://esphome.github.io/esp-web-tools/" target="_blank">ESP Web Tools</a>
+  </div>
+
+  <!-- 这是页面的核心JavaScript逻辑 -->
+  <script>
+    // 选中所有的单选按钮
+    const radioButtons = document.querySelectorAll('input[name="hardware"]');
+    
+    // 选中刷写按钮所在的容器
+    const flasherContainer = document.getElementById('flasher-container');
+    
+    // 选中刷写按钮本身
+    const installButton = document.querySelector('esp-web-install-button');
+
+    // 为每一个单选按钮都添加一个 "change" (状态改变) 的监听器
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', (event) => {
+        // 当用户做出选择后，执行以下操作：
+        
+        // 1. 获取用户选择的设备的 value (比如 "device_c3")
+        const selectedDevice = event.target.value;
+        
+        // 2. 【核心】根据这个 value 动态生成 manifest 文件的路径
+        installButton.manifest = `./firmware/test${selectedDevice}.json`;
+        
+        // 3. 将之前隐藏的刷写按钮容器显示出来
+        flasherContainer.classList.remove('invisible');
+      });
+    });
+  </script>
+</body>
+</html>
