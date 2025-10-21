@@ -9,15 +9,11 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
-
-    <!-- 核心功能库，保持不变 -->
     <script type="module" src="https://unpkg.com/esp-web-tools@8.0.1/dist/web/install-button.js?module"></script>
 
-    <!-- 这是优化后的全部样式 -->
     <style>
       /* --- 1. CSS 变量定义 --- */
       :root {
-		--Checkbox: #000000;
         --color-background: #f0f2f5;
         --color-text: #333;
         --color-primary: #007bff;
@@ -27,9 +23,7 @@
         --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
 
-      /* 当body有.dark-mode类时，应用这些暗黑主题变量 */
       body.dark-mode {
-		--Checkbox: #000000;
         --color-background: #1a1a1a;
         --color-text: #e0e0e0;
         --color-primary: #58a6ff;
@@ -63,139 +57,80 @@
         transition: background-color 0.3s, border-color 0.3s;
       }
 
-      h1 {
-        margin-top: 0;
-        color: var(--color-primary);
-      }
-      
-      a {
-        color: var(--color-primary);
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
+      h1 { margin-top: 0; color: var(--color-primary); }
+      a { color: var(--color-primary); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .footer { margin-top: 2em; padding-top: 1em; font-size: 0.9em; color: #888; }
+      #theme-toggle { position: absolute; top: 1em; right: 1em; background: var(--color-card-background); border: 1px solid var(--color-border); color: var(--color-text); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; justify-content: center; align-items: center; transition: transform 0.2s; }
+      #theme-toggle:hover { transform: scale(1.1); }
+      .button-row { margin-top: 2.5em; }
+      button[slot="activate"] { background-color: var(--color-primary); color: white; font-size: 1.1em; font-weight: bold; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: background-color 0.3s, transform 0.2s; }
+      button[slot="activate"]:hover { background-color: var(--color-primary-hover); transform: scale(1.05); }
+      .invisible { visibility: hidden; }
 
-      .footer {
+      /*
+       * --- [ 这是最终的、100%可用的单选按钮样式 ] ---
+       * 原理：background-clip 方案
+      */
+
+      .radios {
+        padding: 0;
         margin-top: 2em;
-        padding-top: 1em;
-        font-size: 0.9em;
-        color: #888;
+        text-align: left;
+        display: inline-block;
       }
-      
-      /* --- 3. 组件样式 --- */
-      
-      /* 主题切换按钮 */
-      #theme-toggle {
-        position: absolute;
-        top: 1em;
-        right: 1em;
-        background: var(--color-card-background);
-        border: 1px solid var(--color-border);
-        color: var(--color-text);
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.2em;
+      .radios li {
+        list-style: none;
+        margin-bottom: 1em;
+      }
+      .radios label {
         display: flex;
-        justify-content: center;
         align-items: center;
-        transition: transform 0.2s;
-      }
-      #theme-toggle:hover {
-          transform: scale(1.1);
-      }
-      
-      /* --- [最终修正版：使用 box-shadow 绘制内芯，最清晰可靠] --- */
-
-	  .radios {
-	    padding: 0;
-	    margin-top: 2em;
-	    text-align: left;
-	    display: inline-block;
-	  }
-	  .radios li {
-	    list-style: none;
-	    margin-bottom: 1em;
-	  }
-	  .radios label {
-	    display: flex;
-	    align-items: center;
-	    cursor: pointer;
-	    font-size: 1.1em;
-	  }
-	  .radios input[type="radio"] {
-	    display: none; /* 隐藏原始的单选按钮 */
-	  }
-	  
-	  /* 用 ::before 伪元素画出我们的自定义按钮“外圈” */
-	  .radios label::before {
-	    content: '';
-	    width: 20px;
-	    height: 20px;
-	    box-sizing: border-box; /* 确保边框和内边距包含在宽高内 */
-	    border-radius: 50%;
-	    border: 2px solid var(--color-border);
-	    margin-right: 0.75em;
-	    
-	    /* 将背景设为透明或卡片背景色 */
-	    background-color: var(--color-card-background);
-	  
-	    /* 为动画效果做准备 */
-	    transition: border-color 0.2s, box-shadow 0.2s;
-	  }
-	  
-	  /* 当单选按钮被选中时 */
-	  .radios input[type="radio"]:checked + label::before {
-	    /* 1. 将外圈的边框颜色变成主题色 */
-	    border-color: var(--color-primary);
-	  
-	    /* 2. 【关键】使用 inset box-shadow 画出内芯！ */
-	    /* 语法: inset(向内) x-偏移 y-偏移 模糊半径 扩展半径 颜色 */
-	    /* 这里的 5px 就是内芯半径，可以按需调整 */
-	    box-shadow: inset 0 0 0 5px var(--color-primary);
-	  }
-      
-      /* 刷写按钮容器 */
-      .button-row {
-        margin-top: 2.5em;
-      }
-
-      /* 这是提供给esp-web-tools的自定义按钮样式 */
-      button[slot="activate"] {
-        background-color: var(--color-primary);
-        color: white;
-        font-size: 1.1em;
-        font-weight: bold;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
         cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
+        font-size: 1.1em;
       }
-      button[slot="activate"]:hover {
-        background-color: var(--color-primary-hover);
-        transform: scale(1.05);
-      }
-      
-      /* 用于隐藏元素的CSS类 */
-      .invisible {
-        visibility: hidden;
+      /* 1. 隐藏原始的、不好看的单选按钮 */
+      .radios input[type="radio"] {
+        display: none;
       }
 
+      /* 2. 用 ::before 伪元素画出我们的自定义按钮“外圈” */
+      .radios label::before {
+        content: '';
+        width: 20px;
+        height: 20px;
+        box-sizing: border-box; /* 让边框宽度包含在20px之内 */
+        border-radius: 50%;
+        border: 2px solid var(--color-border);
+        margin-right: 0.75em;
+        background-color: transparent; /* 未选中时，背景是透明的 */
+        
+        /* 预留出内芯的位置，这是成功的关键！ */
+        padding: 3px;
+        
+        /* 让背景色只显示在 padding 内部，从而形成内芯 */
+        background-clip: content-box; 
+        
+        /* 添加过渡动画，让变化更平滑 */
+        transition: border-color 0.2s, background-color 0.2s;
+      }
+
+      /* 3. 当单选按钮被选中时，改变外圈和内芯的颜色 */
+      .radios input[type="radio"]:checked + label::before {
+        border-color: var(--color-primary);      /* 外圈边框变色 */
+        background-color: var(--color-primary);  /* 内芯出现并变色 */
+      }
+      
     </style>
   </head>
 
   <body>
-    <!-- 这是新增的主题切换按钮 -->
     <button id="theme-toggle">🌙</button>
 
     <div class="content">
       <h1>固件下载测试</h1>
       <p>请选择您的硬件型号以继续</p>
       
-      <!-- HTML 结构保持不变 -->
       <ul class="radios">
         <li>
           <label><input type="radio" name="type" value="1" /> test1（彩灯）</label>
@@ -206,7 +141,6 @@
       </ul>
       
       <p class="button-row">
-        <!-- 为了方便自定义按钮，我们在里面添加了一个button元素 -->
         <esp-web-install-button class="invisible">
           <button slot="activate">连接并刷写</button>
         </esp-web-install-button>
@@ -219,25 +153,19 @@
       </div>
     </div>
     
-    <!-- JavaScript 部分 -->
     <script>
-      // --- 您的核心刷写逻辑，保持不变 ---
       document.querySelectorAll('input[name="type"]').forEach(radio =>
         radio.addEventListener("change", () => {
           const button = document.querySelector('esp-web-install-button');
-          // 注意：我将manifest路径修改得更标准，移除了开头的 `./` 
-          // 它会自动从当前目录寻找，这更可靠
           button.manifest = `firmware/test${radio.value}.json`; 
           button.classList.remove('invisible');
         })
       );
 
-      // --- 这是新增的主题切换逻辑 ---
       const themeToggle = document.getElementById('theme-toggle');
       const body = document.body;
       const themeKey = 'theme-preference';
 
-      // 切换函数
       const toggleTheme = () => {
         body.classList.toggle('dark-mode');
         const isDarkMode = body.classList.contains('dark-mode');
@@ -245,26 +173,20 @@
         localStorage.setItem(themeKey, isDarkMode ? 'dark' : 'light');
       };
       
-      // 页面加载时，应用保存的主题或系统默认主题
       const applyInitialTheme = () => {
         const savedTheme = localStorage.getItem(themeKey);
-        // 如果有保存的设置，则使用它
         if (savedTheme) {
             if (savedTheme === 'dark') {
                 body.classList.add('dark-mode');
                 themeToggle.textContent = '☀️';
             }
-        // 如果没有保存的设置，则根据系统偏好来设置初始主题
         } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             body.classList.add('dark-mode');
             themeToggle.textContent = '☀️';
         }
       };
 
-      // 绑定点击事件
       themeToggle.addEventListener('click', toggleTheme);
-      
-      // 初始化主题
       applyInitialTheme();
     </script>
   </body>
