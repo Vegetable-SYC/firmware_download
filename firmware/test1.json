@@ -6,7 +6,7 @@
     {
       "chipFamily": "ESP32",
       "parts": [
-        { "path": "test/bootloader.bin", "offset": 0 },
+        { "path": "test/bootloader.bin", "offset": 4096 },
         { "path": "test/partitions.bin", "offset": 32768 },
 		{ "path": "test/firmware.bin", "offset": 65536 },
       ]
