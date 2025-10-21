@@ -107,6 +107,8 @@
       
       /* --- [这是新的、更可靠的单选按钮样式] --- */
 
+      /* --- [最终修正版：解决了暗黑模式对比度问题的单选按钮样式] --- */
+
       .radios {
         padding: 0;
         margin-top: 2em;
@@ -132,25 +134,27 @@
         content: '';
         width: 20px;
         height: 20px;
-        box-sizing: border-box; /* 确保边框宽度不影响总尺寸 */
+        box-sizing: border-box;
         border-radius: 50%;
         border: 2px solid var(--color-border);
         margin-right: 0.75em;
-        transition: border-color 0.2s;
+        
+        /* 【关键修正-1】始终为外圈提供一个独立的背景色，确保对比度 */
+        background-color: var(--color-card-background);
+        
+        transition: border-color 0.2s, background-color 0.2s;
       }
 
-      /* 【核心逻辑】当单选按钮被选中时，执行以下操作 */
+      /* 当单选按钮被选中时 */
       .radios input[type="radio"]:checked + label::before {
         /* 1. 将外圈的边框颜色变成主题色 */
         border-color: var(--color-primary);
 
-        /* 2. 使用径向渐变背景画出内芯！ */
-        /* 这行代码的意思是：画一个圆形的、中心是主题色的渐变，
-           其中半径 0%到50% 的区域是实心的主题色，
-           半径 51% 到 100% 的区域是完全透明的。
-           效果上就等于画了一个占50%大小的实心圆点。
-        */
-        background: radial-gradient(circle, var(--color-primary) 50%, transparent 51%);
+        /* 【关键修正-2】使用经典可靠的 background-clip 来画出内芯 */
+        /* 这会把背景色限制在 padding 区域，从而清晰地显示出内芯 */
+        background-color: var(--color-primary);
+        background-clip: content-box;
+        padding: 3px;
       }
       
       /* 刷写按钮容器 */
