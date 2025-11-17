@@ -389,38 +389,7 @@ body.light-mode .action-btn:not(:disabled):hover {
 }
 
 
-.logging-wrapper {
-    width: 450px;
-    max-width: 100%;
-}
 
-.secondary-btn-group {
-    display: flex;
-    gap: 1rem;
-}
-
-.secondary-btn {
-    flex: 1;
-    background-color: var(--disabled-color);
-    color: var(--disabled-text-color);
-    border: none;
-    border-radius: 8px;
-    padding: 0.8rem 1.2rem;
-    cursor: not-allowed;
-    transition: all 0.3s ease;
-    font-weight: 700;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.logging-wrapper p {
-    font-size: 0.9rem;
-    color: var(--secondary-text-color);
-    margin-top: 1rem;
-}
 
 /* --- Footer --- */
 footer {

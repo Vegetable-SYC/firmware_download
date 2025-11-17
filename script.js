@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const firmwareSelect = document.getElementById('firmware-select');
     const versionSelect = document.getElementById('version-select');
     const connectBtn = document.getElementById('connect-btn');
-    const flashBtn = document.getElementById('flash-btn');
     const installButton = document.getElementById('install-button');
     const themeSwitcher = document.getElementById('theme-switcher');
 
@@ -92,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateButtonStates() {
         const canFlash = selectedDevice && selectedFirmware && selectedVersion;
         connectBtn.disabled = !canFlash;
-        flashBtn.disabled = !canFlash;
         installButton.manifest = canFlash ? selectedVersion.manifest_path : '';
     }
 
@@ -159,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateButtonStates();
     });
 
-    flashBtn.addEventListener('click', () => {
+    connectBtn.addEventListener('click', () => {
         const activateButton = installButton.shadowRoot?.querySelector('button');
         if (activateButton) {
             activateButton.click();
