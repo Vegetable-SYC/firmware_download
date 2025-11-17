@@ -1,532 +1,117 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>固件下载测试</title>
-    <meta
-      name="description"
-      content="Easily allow users to install firmware on the web with a clean interface."
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark light" />
-
-    <!-- 核心功能库，保持不变 -->
-    <script type="module" src="https://unpkg.com/esp-web-tools@8.0.1/dist/web/install-button.js?module"></script>
-
-    <!-- 这是优化后的全部样式 -->
-    <style>
-      /* --- 1. CSS 变量定义 --- */
-      :root {
-        --color-background: #f0f2f5;
-        --color-text: #333;
-        --color-primary: #007bff;
-        --color-primary-hover: #0056b3;
-        --color-card-background: #ffffff;
-        --color-border: #e0e0e0;
-        --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      /* 当body有.dark-mode类时，应用这些暗黑主题变量 */
-      body.dark-mode {
-        --color-background: #1a1a1a;
-        --color-text: #e0e0e0;
-        --color-primary: #58a6ff;
-        --color-primary-hover: #80bfff;
-        --color-card-background: #2c2c2c;
-        --color-border: #444;
-        --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
-      }
-
-      /* --- 2. 基础与布局样式 --- */
-      body {
-        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI",
-          Roboto, Ubuntu, sans-serif;
-        padding: 2em 1em;
-        margin: 0;
-        line-height: 1.6;
-        background-color: var(--color-background);
-        color: var(--color-text);
-        transition: background-color 0.3s, color 0.3s;
-        text-align: center;
-      }
-      
-      .content {
-        max-width: 900px; /* 增加最大宽度 */
-        margin: 0 auto;
-        padding: 2em;
-        background-color: var(--color-card-background);
-        border-radius: 12px;
-        box-shadow: var(--shadow-card);
-        border: 1px solid var(--color-border);
-        transition: background-color 0.3s, border-color 0.3s;
-      }
-
-      h1 {
-        margin-top: 0;
-        color: var(--color-primary);
-      }
-      
-      a {
-        color: var(--color-primary);
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-
-      .footer {
-        margin-top: 2em;
-        padding-top: 1em;
-        font-size: 0.9em;
-        color: #888;
-      }
-      
-      /* --- 3. 组件样式 --- */
-      
-      /* 主题切换按钮 */
-      #theme-toggle {
-        position: absolute;
-        top: 1em;
-        right: 1em;
-        background: var(--color-card-background);
-        border: 1px solid var(--color-border);
-        color: var(--color-text);
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.2em;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: transform 0.2s;
-      }
-      #theme-toggle:hover {
-          transform: scale(1.1);
-      }
-      
-      /* 选择器部分 */
-      .selection-section {
-        margin-top: 2em;
-        text-align: left;
-        transition: opacity 0.3s ease-in-out;
-      }
-
-      .selection-section h2 {
-        font-size: 1.2em;
-        color: var(--color-primary);
-        margin-bottom: 1em;
-        text-align: center;
-      }
-
-      .card-carousel {
-        display: flex;
-        align-items: center;
-        position: relative;
-        margin: 0 1em; /* 调整外边距，为按钮留出更合适的空间 */
-      }
-      /* ... 其他样式 ... */
-      .card-container {
-        display: flex; /* 恢复 Flex 布局 */
-        flex-wrap: nowrap; /* 不换行，实现水平滚动 */
-        gap: 1em;
-        overflow-x: auto; /* 允许水平滚动 */
-        scroll-behavior: smooth; /* 平滑滚动 */
-        padding: 1em 0; /* 避免卡片边缘被裁剪 */
-        -webkit-overflow-scrolling: touch; /* 改善移动端滚动体验 */
-        /* 隐藏滚动条 */
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none;  /* IE and Edge */
-        flex-grow: 1; /* 填充可用空间 */
-      }
-
-      .card-container::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, Opera */
-      }
-
-      .nav-button {
-        /* position: absolute; 移除绝对定位 */
-        /* top: 50%; 移除 */
-        transform: translateY(0); /* 移除 transform */
-        background-color: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        font-size: 1.5em;
-        cursor: pointer;
-        z-index: 10;
-        transition: background-color 0.3s, transform 0.3s;
-        flex-shrink: 0; /* 防止按钮缩小 */
-      }
-
-      .nav-button:hover {
-        background-color: rgba(0, 0, 0, 0.7);
-        transform: scale(1.1); /* 仅缩放 */
-      }
-
-      .nav-button.left {
-        margin-right: 1em; /* 将左侧按钮推开 */
-      }
-
-      .nav-button.right {
-        margin-left: 1em; /* 将右侧按钮推开 */
-      }
-
-      .nav-button:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-      }
-
-      .selection-card {
-        background-color: var(--color-card-background);
-        border: 2px solid var(--color-border);
-        border-radius: 10px;
-        padding: 1em;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-align: center;
-        /* width: 150px; 移除固定宽度，让 Grid 布局控制 */
-        box-shadow: var(--shadow-card);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-width: 120px; /* 确保卡片不会过小 */
-        max-width: 100%; /* 确保卡片不会超出容器 */
-      }
-
-      .selection-card:hover {
-        border-color: var(--color-primary-hover);
-        transform: translateY(-5px) scale(1.02);
-      }
-
-      .selection-card.selected {
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
-        transform: scale(1.05);
-      }
-
-      .selection-card.disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        filter: grayscale(100%);
-      }
-
-      .selection-card img {
-        max-width: 100px;
-        max-height: 100px;
-        margin-bottom: 0.5em;
-        border-radius: 5px;
-        object-fit: contain;
-      }
-
-      .selection-card .card-name {
-        font-weight: bold;
-        color: var(--color-text);
-        margin-bottom: 0.2em;
-      }
-
-      .selection-card .card-description {
-        font-size: 0.8em;
-        color: #888;
-      }
-      
-      /* 响应式调整 */
-      @media (max-width: 600px) {
-        .selection-card {
-          width: 120px; /* 小屏幕下卡片宽度 */
-        }
-        .selection-card img {
-          max-width: 80px;
-          max-height: 80px;
-        }
-      }
-      
-      /* 刷写按钮容器 */
-      .button-row {
-        margin-top: 2.5em;
-      }
-
-      /* 这是提供给esp-web-tools的自定义按钮样式 */
-      button[slot="activate"] {
-        background-color: var(--color-primary);
-        color: white;
-        font-size: 1.1em;
-        font-weight: bold;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s, opacity 0.3s; /* 添加 opacity 过渡 */
-      }
-      button[slot="activate"]:hover {
-        background-color: var(--color-primary-hover);
-        transform: scale(1.05);
-      }
-      
-      /* 用于隐藏元素的CSS类 */
-      .invisible {
-        visibility: hidden;
-        opacity: 0; /* 使用 opacity 进行平滑隐藏 */
-        transition: visibility 0s 0.3s, opacity 0.3s linear; /* 隐藏时延迟 visibility 变化 */
-      }
-      .invisible.visible { /* 用于显示时的类 */
-        visibility: visible;
-        opacity: 1;
-        transition: visibility 0s, opacity 0.3s linear;
-      }
-
-    </style>
-  </head>
-
-  <body>
-    <!-- 这是新增的主题切换按钮 -->
-    <button id="theme-toggle">🌙</button>
-
-    <div class="content">
-      <h1>固件下载测试</h1>
-      <p>请选择您的设备、固件和版本</p>
-      
-      <div id="device-selection" class="selection-section">
-        <h2>选择设备</h2>
-        <div class="card-carousel">
-          <button class="nav-button left" data-target="device-cards">&lt;</button>
-          <div class="card-container" id="device-cards">
-            <!-- 设备卡片将由 JavaScript 动态生成 -->
-          </div>
-          <button class="nav-button right" data-target="device-cards">&gt;</button>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BITRONICS - Web Flasher</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" href="freenove.ico" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <div class="logo">Freenove</div>
+        <div class="header-right">
+            <nav>
+                <a href="#" class="nav-button">Get Started</a>
+                <a href="#" class="nav-button">Features</a>
+                <a href="#" class="nav-button">Shop</a>
+            </nav>
+            <div id="theme-switcher" class="theme-switcher">
+                <i class="fas fa-moon"></i>
+            </div>
         </div>
-      </div>
+    </header>
 
-      <div id="firmware-selection" class="selection-section invisible">
-        <h2>选择固件</h2>
-        <div class="card-carousel">
-          <button class="nav-button left" data-target="firmware-cards">&lt;</button>
-          <div class="card-container" id="firmware-cards">
-            <!-- 固件卡片将由 JavaScript 动态生成 -->
-          </div>
-          <button class="nav-button right" data-target="firmware-cards">&gt;</button>
+    <main>
+        <section class="hero">
+            <h1 class="main-title">Flash directly from the web</h1>
+            <p class="subtitle">Connect your device, select your model and board version, and start flashing immediately. No setup required.</p>
+        </section>
+
+        <section class="stepper">
+            <!-- Step 1: Select Device -->
+            <div id="step-1" class="step active">
+                <div class="step-icon"><i class="fas fa-desktop"></i></div>
+                <div id="select-device-btn" class="step-content step-button">
+                    <span>Select device</span>
+                </div>
+            </div>
+
+            <!-- Step 2: Select Firmware -->
+            <div id="step-2" class="step">
+                <div class="step-icon"><i class="fas fa-microchip"></i></div>
+                <div class="step-content">
+                    <div class="dropdown-container">
+                        <select id="firmware-select" disabled>
+                            <option value="">Select firmware</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Select Version -->
+            <div id="step-3" class="step">
+                <div class="step-icon"><i class="fas fa-code-branch"></i></div>
+                <div class="step-content">
+                    <div class="dropdown-container">
+                        <select id="version-select" disabled>
+                            <option value="">Select version</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="actions">
+            <button id="connect-btn" class="action-btn" disabled><i class="fas fa-link"></i> Connect</button>
+            <esp-web-install-button id="install-button" style="display: none;"></esp-web-install-button>
+            <button id="flash-btn" class="action-btn" disabled><i class="fas fa-bolt"></i> Start Flashing</button>
+
+            <div class="logging-wrapper">
+                <div class="secondary-btn-group">
+                    <button id="start-logging-btn" class="secondary-btn"><i class="far fa-file-alt"></i> Start Logging</button>
+                    <button id="download-logs-btn" class="secondary-btn"><i class="fas fa-download"></i> Download Logs</button>
+                </div>
+                <p>View device logs in real-time or download them for offline analysis.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-copyright">
+            © 2025 Freenove
         </div>
-      </div>
-
-      <div id="version-selection" class="selection-section invisible">
-        <h2>选择版本</h2>
-        <div class="card-carousel">
-          <button class="nav-button left" data-target="version-cards">&lt;</button>
-          <div class="card-container" id="version-cards">
-            <!-- 版本卡片将由 JavaScript 动态生成 -->
-          </div>
-          <button class="nav-button right" data-target="version-cards">&gt;</button>
+        <div class="footer-socials">
+            <a href="https://github.com/Freenove" target="_blank" aria-label="GitHub">
+                <i class="fab fa-github"></i>
+            </a>
+            <a href="https://www.youtube.com/@Freenove" target="_blank" aria-label="YouTube">
+                <i class="fab fa-youtube"></i>
+            </a>
         </div>
-      </div>
-      
-      <p class="button-row">
-        <esp-web-install-button class="invisible" id="install-button">
-          <button slot="activate">连接并刷写</button>
-        </esp-web-install-button>
-      </p>
+    </footer>
 
-      <div class="footer">
-        <a href="https://github.com/sle118/squeezelite-esp32">固件下载</a> 
-        &mdash;
-        Installer powered by <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>.
-      </div>
+    <!-- Device Selection Modal -->
+    <div id="device-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select device</h2>
+                <button id="close-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-main">
+                <button class="modal-nav-arrow left-arrow"><i class="fas fa-chevron-left"></i></button>
+                <div class="device-carousel">
+                    <div id="device-list" class="device-list">
+                        <!-- Device items will be injected by JS -->
+                    </div>
+                </div>
+                <button class="modal-nav-arrow right-arrow"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
     </div>
     
-    <!-- JavaScript 部分 -->
-    <script>
-      // --- 新的核心刷写逻辑将在这里实现 ---
-      const deviceSelection = document.getElementById('device-selection');
-      const firmwareSelection = document.getElementById('firmware-selection');
-      const versionSelection = document.getElementById('version-selection');
-      const deviceCardsContainer = document.getElementById('device-cards');
-      const firmwareCardsContainer = document.getElementById('firmware-cards');
-      const versionCardsContainer = document.getElementById('version-cards');
-      const installButton = document.getElementById('install-button');
-
-      let configData = null; // 存储从 config.json 加载的数据
-      let selectedDevice = null;
-      let selectedFirmware = null;
-      let selectedVersion = null;
-
-      // 辅助函数：创建卡片元素
-      function createCard(item, type) {
-        const card = document.createElement('div');
-        card.classList.add('selection-card');
-        card.dataset.id = item.id;
-        card.dataset.type = type;
-
-        if (item.image) {
-          const img = document.createElement('img');
-          img.src = item.image;
-          img.alt = item.name;
-          card.appendChild(img);
-        }
-
-        const name = document.createElement('div');
-        name.classList.add('card-name');
-        name.textContent = item.name;
-        card.appendChild(name);
-
-        if (item.description) {
-          const description = document.createElement('div');
-          description.classList.add('card-description');
-          description.textContent = item.description;
-          card.appendChild(description);
-        }
-
-        card.addEventListener('click', () => handleCardClick(item, type));
-        return card;
-      }
-
-      // 处理卡片点击事件
-      function handleCardClick(item, type) {
-        // 清除所有选中状态
-        document.querySelectorAll(`.selection-card[data-type="${type}"]`).forEach(card => {
-          card.classList.remove('selected');
-        });
-        // 设置当前选中状态
-        const clickedCard = document.querySelector(`.selection-card[data-type="${type}"][data-id="${item.id}"]`);
-        if (clickedCard) {
-          clickedCard.classList.add('selected');
-        }
-
-        if (type === 'device') {
-          selectedDevice = item;
-          selectedFirmware = null;
-          selectedVersion = null;
-          renderFirmwares();
-          firmwareSelection.classList.remove('invisible');
-          versionSelection.classList.add('invisible');
-          installButton.classList.remove('visible');
-          installButton.classList.add('invisible');
-        } else if (type === 'firmware') {
-          selectedFirmware = item;
-          selectedVersion = null;
-          renderVersions();
-          versionSelection.classList.remove('invisible');
-          installButton.classList.remove('visible');
-          installButton.classList.add('invisible');
-        } else if (type === 'version') {
-          selectedVersion = item;
-          if (selectedVersion && selectedVersion.manifest_path) {
-            installButton.manifest = selectedVersion.manifest_path;
-            installButton.classList.remove('invisible');
-            installButton.classList.add('visible');
-          } else {
-            installButton.classList.remove('visible');
-            installButton.classList.add('invisible');
-          }
-        }
-      }
-
-      // 渲染设备卡片
-      function renderDevices() {
-        deviceCardsContainer.innerHTML = '';
-        configData.devices.forEach(device => {
-          deviceCardsContainer.appendChild(createCard(device, 'device'));
-        });
-      }
-
-      // 渲染固件卡片
-      function renderFirmwares() {
-        firmwareCardsContainer.innerHTML = '';
-        if (selectedDevice && selectedDevice.firmwares) {
-          selectedDevice.firmwares.forEach(firmware => {
-            firmwareCardsContainer.appendChild(createCard(firmware, 'firmware'));
-          });
-        }
-      }
-
-      // 渲染版本卡片
-      function renderVersions() {
-        versionCardsContainer.innerHTML = '';
-        if (selectedFirmware && selectedFirmware.versions) {
-          selectedFirmware.versions.forEach(version => {
-            versionCardsContainer.appendChild(createCard(version, 'version'));
-          });
-        }
-      }
-
-      // 异步加载配置数据
-      async function loadConfig() {
-        try {
-          const response = await fetch('firmware/config.json');
-          configData = await response.json();
-          renderDevices();
-        } catch (error) {
-          console.error('加载配置失败:', error);
-          deviceCardsContainer.innerHTML = '<p>加载设备信息失败。</p>';
-        }
-      }
-
-      // 页面加载时初始化
-      document.addEventListener('DOMContentLoaded', loadConfig);
-
-      // 处理卡片容器滚动
-      function handleScroll(containerId, direction) {
-        const container = document.getElementById(containerId);
-        const scrollAmount = container.clientWidth / 2; // 每次滚动半个容器宽度
-
-        if (direction === 'left') {
-          container.scrollBy({
-            left: -scrollAmount,
-            behavior: 'smooth'
-          });
-        } else {
-          container.scrollBy({
-            left: scrollAmount,
-            behavior: 'smooth'
-          });
-        }
-      }
-
-      // 绑定导航按钮事件
-      document.querySelectorAll('.nav-button').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const targetContainerId = event.target.dataset.target;
-          const direction = event.target.classList.contains('left') ? 'left' : 'right';
-          handleScroll(targetContainerId, direction);
-        });
-      });
-
-
-      // --- 这是新增的主题切换逻辑 ---
-      const themeToggle = document.getElementById('theme-toggle');
-      const body = document.body;
-      const themeKey = 'theme-preference';
-
-      // 切换函数
-      const toggleTheme = () => {
-        body.classList.toggle('dark-mode');
-        const isDarkMode = body.classList.contains('dark-mode');
-        themeToggle.textContent = isDarkMode ? '☀️' : '🌙';
-        localStorage.setItem(themeKey, isDarkMode ? 'dark' : 'light');
-      };
-      
-      // 页面加载时，应用保存的主题或系统默认主题
-      const applyInitialTheme = () => {
-        const savedTheme = localStorage.getItem(themeKey);
-        // 如果有保存的设置，则使用它
-        if (savedTheme) {
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-mode');
-                themeToggle.textContent = '☀️';
-            }
-        // 如果没有保存的设置，则根据系统偏好来设置初始主题
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            body.classList.add('dark-mode');
-            themeToggle.textContent = '☀️';
-        }
-      };
-
-      // 绑定点击事件
-      themeToggle.addEventListener('click', toggleTheme);
-      
-      // 初始化主题
-      applyInitialTheme();
-    </script>
-  </body>
+    <script type="module" src="https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module"></script>
+    <script src="script.js"></script>
+</body>
 </html>

@@ -1,14 +1,42 @@
 {
   "devices": [
     {
-      "id": "test1",
-      "name": "test1（彩灯）",
+      "id": "esp32s3",
+      "name": "ESP32-S3",
       "image": "freenove.ico",
       "firmwares": [
         {
-          "id": "main",
-          "name": "主固件",
-          "image": "freenove.ico",
+          "id": "xiaozhi_1.14",
+          "name": "Xiaozhi 1.14inch",
+          "versions": [
+            {
+              "id": "1.0",
+              "name": "v1.0",
+              "manifest_path": "firmware/xiaozhi_1.14inch.json"
+            }
+          ]
+        },
+        {
+          "id": "xiaozhi_3.5",
+          "name": "Xiaozhi 3.5inch",
+          "versions": [
+            {
+              "id": "1.0",
+              "name": "v1.0",
+              "manifest_path": "firmware/xiaozhi_3.5inch.json"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "esp32wroom",
+      "name": "ESP32-WROOM",
+      "image": "freenove.ico",
+      "firmwares": [
+        {
+          "id": "test1",
+          "name": "test1",
           "versions": [
             {
               "id": "1.0.0",
@@ -16,18 +44,10 @@
               "manifest_path": "firmware/test1.json"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": "test2",
-      "name": "test2（串口）",
-      "image": "freenove.ico",
-      "firmwares": [
+        },
         {
-          "id": "main",
-          "name": "主固件",
-          "image": "freenove.ico",
+          "id": "test2",
+          "name": "test2",
           "versions": [
             {
               "id": "1.0.0",

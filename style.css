@@ -1,0 +1,466 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+:root {
+    --background-color: #121212;
+    --primary-text-color: #FFFFFF;
+    --secondary-text-color: #B3B3B3;
+    --surface-color: #1E1E1E;
+    --primary-accent-color: #FFFFFF;
+    --primary-accent-hover: #CCCCCC;
+    --disabled-color: #333333;
+    --disabled-text-color: #666666;
+    --border-color: #2A2A2A;
+    --font-main: 'Inter', sans-serif;
+    --modal-backdrop-color: rgba(0, 0, 0, 0.5);
+    --modal-surface-color: rgba(30, 30, 30, 0.8);
+}
+
+body.light-mode {
+    --background-color: #F0F2F5;
+    --primary-text-color: #000000;
+    --secondary-text-color: #555555;
+    --surface-color: #FFFFFF;
+    --primary-accent-color: #000000;
+    --primary-accent-hover: #333333;
+    --disabled-color: #E0E0E0;
+    --disabled-text-color: #AAAAAA;
+    --border-color: #DDDDDD;
+    --modal-backdrop-color: rgba(255, 255, 255, 0.5);
+    --modal-surface-color: rgba(245, 245, 245, 0.8);
+}
+
+/* --- Base & Layout --- */
+body {
+    background-color: var(--background-color);
+    color: var(--primary-text-color);
+    font-family: var(--font-main);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+main {
+    max-width: 1100px;
+    width: 100%;
+    padding: 1.5rem 2rem 5rem; /* Added padding-bottom */
+    box-sizing: border-box;
+    flex-grow: 1;
+}
+
+/* --- Header --- */
+header {
+    width: 100%;
+    max-width: 1200px;
+    padding: 1.5rem 2rem;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nav-button {
+    color: var(--secondary-text-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-button:hover {
+    background-color: var(--surface-color);
+    color: var(--primary-text-color);
+}
+
+.theme-switcher {
+    cursor: pointer;
+    font-size: 1.5rem; /* Increased size */
+    color: var(--secondary-text-color);
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.theme-switcher:hover {
+    color: var(--primary-text-color);
+    transform: scale(1.1) rotate(15deg);
+}
+
+
+/* --- Typography & Common Elements --- */
+.main-title {
+    font-size: 4rem;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: -2px;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: var(--secondary-text-color);
+    max-width: 600px;
+    margin: 1rem auto 0;
+    line-height: 1.6;
+}
+
+/* --- Stepper (Vertical Internal Layout) --- */
+.stepper {
+    display: flex;
+    flex-direction: row; /* Arrange step cards horizontally */
+    gap: 5rem; /* Increased gap */
+    margin: 3rem 0;
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+    animation-delay: 0.3s;
+}
+
+.step {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem; /* More vertical padding */
+    flex: 1; /* Equal width for each step */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column; /* Icon and content are stacked vertically */
+    align-items: center;
+    gap: 1.5rem; /* Gap between icon and content */
+    transition: all 0.4s ease;
+}
+
+.step:not(.active) {
+    filter: grayscale(1);
+    opacity: 0.5;
+}
+
+.step.active {
+    filter: grayscale(0);
+    opacity: 1;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.step-icon {
+    font-size: 3.5rem; /* Increased icon size */
+    color: var(--secondary-text-color);
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+}
+
+.step.active .step-icon {
+    color: var(--primary-text-color);
+}
+
+.step-content {
+    width: 100%;
+    text-align: center;
+}
+
+.step-button {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    background-color: var(--primary-accent-color);
+    color: var(--background-color);
+    font-weight: 700;
+}
+
+.step.active .step-button:hover {
+    background-color: var(--primary-accent-hover);
+    color: var(--primary-text-color);
+}
+body.light-mode .step.active .step-button:hover {
+    color: var(--background-color);
+}
+
+
+.step-button.selected {
+    background-color: var(--primary-accent-color);
+    color: var(--background-color);
+    cursor: default;
+    text-align: center;
+    padding: 0.75rem 1rem;
+}
+.step.active .step-button.selected:hover {
+    background-color: var(--primary-accent-color);
+}
+
+
+/* --- Select Dropdown --- */
+select {
+    width: 100%;
+    background-color: var(--disabled-color);
+    color: var(--disabled-text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: var(--font-main);
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666666' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    cursor: not-allowed;
+    transition: all 0.3s ease;
+}
+
+select:not(:disabled) {
+    background-color: var(--surface-color);
+    color: var(--primary-text-color);
+    border-color: var(--primary-text-color);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23FFFFFF' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+}
+body.light-mode select:not(:disabled) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23000000' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+}
+
+/* --- Modal Styles (Refactored) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--modal-backdrop-color);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: var(--modal-surface-color);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.is-visible .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+
+.close-btn {
+    background: none; border: none; color: var(--secondary-text-color);
+    font-size: 2rem; line-height: 1; cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+.close-btn:hover { color: var(--primary-text-color); transform: rotate(90deg); }
+
+.modal-main { display: flex; align-items: center; padding: 2rem 0; }
+
+.modal-nav-arrow {
+    background: none; border: none; color: var(--secondary-text-color);
+    font-size: 2rem; cursor: pointer; padding: 0 2rem;
+    transition: color 0.2s ease, transform 0.2s ease; z-index: 10;
+}
+.modal-nav-arrow:hover { color: var(--primary-text-color); transform: scale(1.2); }
+
+.device-carousel { flex-grow: 1; overflow: hidden; }
+
+.device-list {
+    display: flex; gap: 3rem; padding: 2rem;
+    overflow-x: auto; scroll-behavior: smooth;
+    scrollbar-width: none; -ms-overflow-style: none;
+}
+.device-list::-webkit-scrollbar { display: none; }
+
+.device-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 1.5rem; cursor: pointer; transition: transform 0.3s ease;
+}
+.device-item:hover { transform: scale(1.05); }
+
+.device-image-wrapper {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.device-image-placeholder {
+    width: 120px;
+    height: 100px;
+    object-fit: contain;
+    transition: all 0.3s ease-out;
+}
+
+.device-name {
+    font-size: 1.1rem; font-weight: 500;
+    color: var(--secondary-text-color); transition: color 0.3s ease;
+}
+.device-item:hover .device-name { color: var(--primary-text-color); }
+
+/* --- Action Buttons & Logging --- */
+.actions {
+    margin: 3rem 0;
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+    animation-delay: 0.6s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.action-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 450px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.action-btn:disabled {
+    background-color: var(--disabled-color);
+    color: var(--disabled-text-color);
+    cursor: not-allowed;
+}
+
+.action-btn:not(:disabled) {
+    background-color: var(--primary-accent-color);
+    color: var(--background-color);
+    cursor: pointer;
+}
+.action-btn:not(:disabled):hover {
+    background-color: var(--primary-accent-hover);
+    color: var(--primary-text-color);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+body.light-mode .action-btn:not(:disabled):hover {
+    color: var(--background-color);
+}
+
+
+.logging-wrapper {
+    width: 450px;
+    max-width: 100%;
+}
+
+.secondary-btn-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.secondary-btn {
+    flex: 1;
+    background-color: var(--disabled-color);
+    color: var(--disabled-text-color);
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.2rem;
+    cursor: not-allowed;
+    transition: all 0.3s ease;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.logging-wrapper p {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    margin-top: 1rem;
+}
+
+/* --- Footer --- */
+footer {
+    width: 100%;
+    max-width: 1200px;
+    padding: 2rem;
+    box-sizing: border-box;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--secondary-text-color);
+}
+
+.footer-socials {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.footer-socials a {
+    color: var(--secondary-text-color);
+    font-size: 1.5rem;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.footer-socials a:hover {
+    color: var(--primary-text-color);
+    transform: translateY(-3px);
+}
+
+
+/* --- Animations & Helpers --- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .stepper, footer { flex-direction: column; gap: 1rem; }
+    .step { flex-direction: column; align-items: center; padding: 1.5rem; }
+    .step-content { width: 100%; }
+    .step-button.selected { text-align: center; }
+    header { flex-direction: column; gap: 1rem; }
+}
