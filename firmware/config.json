@@ -1,0 +1,42 @@
+{
+  "devices": [
+    {
+      "id": "test1",
+      "name": "test1（彩灯）",
+      "image": "freenove.ico",
+      "firmwares": [
+        {
+          "id": "main",
+          "name": "主固件",
+          "image": "freenove.ico",
+          "versions": [
+            {
+              "id": "1.0.0",
+              "name": "v1.0.0",
+              "manifest_path": "firmware/test1.json"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "test2",
+      "name": "test2（串口）",
+      "image": "freenove.ico",
+      "firmwares": [
+        {
+          "id": "main",
+          "name": "主固件",
+          "image": "freenove.ico",
+          "versions": [
+            {
+              "id": "1.0.0",
+              "name": "v1.0.0",
+              "manifest_path": "firmware/test2.json"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

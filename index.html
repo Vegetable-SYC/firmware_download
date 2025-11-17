@@ -51,7 +51,7 @@
       }
       
       .content {
-        max-width: 550px;
+        max-width: 900px; /* 增加最大宽度 */
         margin: 0 auto;
         padding: 2em;
         background-color: var(--color-card-background);
@@ -105,42 +105,143 @@
           transform: scale(1.1);
       }
       
-      /* 自定义单选按钮 */
-      .radios {
-        padding: 0;
+      /* 选择器部分 */
+      .selection-section {
         margin-top: 2em;
         text-align: left;
-        display: inline-block; /* 让列表宽度自适应内容 */
+        transition: opacity 0.3s ease-in-out;
       }
-      .radios li {
-        list-style: none;
+
+      .selection-section h2 {
+        font-size: 1.2em;
+        color: var(--color-primary);
         margin-bottom: 1em;
+        text-align: center;
       }
-      .radios label {
+
+      .card-carousel {
         display: flex;
         align-items: center;
-        cursor: pointer;
-        font-size: 1.1em;
+        position: relative;
+        margin: 0 1em; /* 调整外边距，为按钮留出更合适的空间 */
       }
-      .radios input[type="radio"] {
-        display: none; /* 隐藏原始按钮 */
+      /* ... 其他样式 ... */
+      .card-container {
+        display: flex; /* 恢复 Flex 布局 */
+        flex-wrap: nowrap; /* 不换行，实现水平滚动 */
+        gap: 1em;
+        overflow-x: auto; /* 允许水平滚动 */
+        scroll-behavior: smooth; /* 平滑滚动 */
+        padding: 1em 0; /* 避免卡片边缘被裁剪 */
+        -webkit-overflow-scrolling: touch; /* 改善移动端滚动体验 */
+        /* 隐藏滚动条 */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* IE and Edge */
+        flex-grow: 1; /* 填充可用空间 */
       }
-      /* 自定义按钮的“外圈” */
-      .radios label::before {
-        content: '';
-        width: 20px;
-        height: 20px;
+
+      .card-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+      }
+
+      .nav-button {
+        /* position: absolute; 移除绝对定位 */
+        /* top: 50%; 移除 */
+        transform: translateY(0); /* 移除 transform */
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
         border-radius: 50%;
-        border: 2px solid var(--color-border);
-        margin-right: 0.75em;
-        transition: border-color 0.3s;
+        width: 40px;
+        height: 40px;
+        font-size: 1.5em;
+        cursor: pointer;
+        z-index: 10;
+        transition: background-color 0.3s, transform 0.3s;
+        flex-shrink: 0; /* 防止按钮缩小 */
       }
-      /* 自定义按钮的“内芯” */
-      .radios input[type="radio"]:checked + label::before {
+
+      .nav-button:hover {
+        background-color: rgba(0, 0, 0, 0.7);
+        transform: scale(1.1); /* 仅缩放 */
+      }
+
+      .nav-button.left {
+        margin-right: 1em; /* 将左侧按钮推开 */
+      }
+
+      .nav-button.right {
+        margin-left: 1em; /* 将右侧按钮推开 */
+      }
+
+      .nav-button:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .selection-card {
+        background-color: var(--color-card-background);
+        border: 2px solid var(--color-border);
+        border-radius: 10px;
+        padding: 1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        /* width: 150px; 移除固定宽度，让 Grid 布局控制 */
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 120px; /* 确保卡片不会过小 */
+        max-width: 100%; /* 确保卡片不会超出容器 */
+      }
+
+      .selection-card:hover {
+        border-color: var(--color-primary-hover);
+        transform: translateY(-5px) scale(1.02);
+      }
+
+      .selection-card.selected {
         border-color: var(--color-primary);
-        background-color: var(--color-primary);
-        background-clip: content-box;
-        padding: 3px;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+        transform: scale(1.05);
+      }
+
+      .selection-card.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        filter: grayscale(100%);
+      }
+
+      .selection-card img {
+        max-width: 100px;
+        max-height: 100px;
+        margin-bottom: 0.5em;
+        border-radius: 5px;
+        object-fit: contain;
+      }
+
+      .selection-card .card-name {
+        font-weight: bold;
+        color: var(--color-text);
+        margin-bottom: 0.2em;
+      }
+
+      .selection-card .card-description {
+        font-size: 0.8em;
+        color: #888;
+      }
+      
+      /* 响应式调整 */
+      @media (max-width: 600px) {
+        .selection-card {
+          width: 120px; /* 小屏幕下卡片宽度 */
+        }
+        .selection-card img {
+          max-width: 80px;
+          max-height: 80px;
+        }
       }
       
       /* 刷写按钮容器 */
@@ -158,7 +259,7 @@
         padding: 12px 24px;
         border-radius: 8px;
         cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
+        transition: background-color 0.3s, transform 0.2s, opacity 0.3s; /* 添加 opacity 过渡 */
       }
       button[slot="activate"]:hover {
         background-color: var(--color-primary-hover);
@@ -168,6 +269,13 @@
       /* 用于隐藏元素的CSS类 */
       .invisible {
         visibility: hidden;
+        opacity: 0; /* 使用 opacity 进行平滑隐藏 */
+        transition: visibility 0s 0.3s, opacity 0.3s linear; /* 隐藏时延迟 visibility 变化 */
+      }
+      .invisible.visible { /* 用于显示时的类 */
+        visibility: visible;
+        opacity: 1;
+        transition: visibility 0s, opacity 0.3s linear;
       }
 
     </style>
@@ -179,21 +287,43 @@
 
     <div class="content">
       <h1>固件下载测试</h1>
-      <p>请选择您的硬件型号以继续</p>
+      <p>请选择您的设备、固件和版本</p>
       
-      <!-- HTML 结构保持不变 -->
-      <ul class="radios">
-        <li>
-          <label><input type="radio" name="type" value="1" /> test1（彩灯）</label>
-        </li>
-        <li>
-          <label><input type="radio" name="type" value="2" /> test2（串口）</label>
-        </li>
-      </ul>
+      <div id="device-selection" class="selection-section">
+        <h2>选择设备</h2>
+        <div class="card-carousel">
+          <button class="nav-button left" data-target="device-cards">&lt;</button>
+          <div class="card-container" id="device-cards">
+            <!-- 设备卡片将由 JavaScript 动态生成 -->
+          </div>
+          <button class="nav-button right" data-target="device-cards">&gt;</button>
+        </div>
+      </div>
+
+      <div id="firmware-selection" class="selection-section invisible">
+        <h2>选择固件</h2>
+        <div class="card-carousel">
+          <button class="nav-button left" data-target="firmware-cards">&lt;</button>
+          <div class="card-container" id="firmware-cards">
+            <!-- 固件卡片将由 JavaScript 动态生成 -->
+          </div>
+          <button class="nav-button right" data-target="firmware-cards">&gt;</button>
+        </div>
+      </div>
+
+      <div id="version-selection" class="selection-section invisible">
+        <h2>选择版本</h2>
+        <div class="card-carousel">
+          <button class="nav-button left" data-target="version-cards">&lt;</button>
+          <div class="card-container" id="version-cards">
+            <!-- 版本卡片将由 JavaScript 动态生成 -->
+          </div>
+          <button class="nav-button right" data-target="version-cards">&gt;</button>
+        </div>
+      </div>
       
       <p class="button-row">
-        <!-- 为了方便自定义按钮，我们在里面添加了一个button元素 -->
-        <esp-web-install-button class="invisible">
+        <esp-web-install-button class="invisible" id="install-button">
           <button slot="activate">连接并刷写</button>
         </esp-web-install-button>
       </p>
@@ -207,16 +337,161 @@
     
     <!-- JavaScript 部分 -->
     <script>
-      // --- 您的核心刷写逻辑，保持不变 ---
-      document.querySelectorAll('input[name="type"]').forEach(radio =>
-        radio.addEventListener("change", () => {
-          const button = document.querySelector('esp-web-install-button');
-          // 注意：我将manifest路径修改得更标准，移除了开头的 `./` 
-          // 它会自动从当前目录寻找，这更可靠
-          button.manifest = `firmware/test${radio.value}.json`; 
-          button.classList.remove('invisible');
-        })
-      );
+      // --- 新的核心刷写逻辑将在这里实现 ---
+      const deviceSelection = document.getElementById('device-selection');
+      const firmwareSelection = document.getElementById('firmware-selection');
+      const versionSelection = document.getElementById('version-selection');
+      const deviceCardsContainer = document.getElementById('device-cards');
+      const firmwareCardsContainer = document.getElementById('firmware-cards');
+      const versionCardsContainer = document.getElementById('version-cards');
+      const installButton = document.getElementById('install-button');
+
+      let configData = null; // 存储从 config.json 加载的数据
+      let selectedDevice = null;
+      let selectedFirmware = null;
+      let selectedVersion = null;
+
+      // 辅助函数：创建卡片元素
+      function createCard(item, type) {
+        const card = document.createElement('div');
+        card.classList.add('selection-card');
+        card.dataset.id = item.id;
+        card.dataset.type = type;
+
+        if (item.image) {
+          const img = document.createElement('img');
+          img.src = item.image;
+          img.alt = item.name;
+          card.appendChild(img);
+        }
+
+        const name = document.createElement('div');
+        name.classList.add('card-name');
+        name.textContent = item.name;
+        card.appendChild(name);
+
+        if (item.description) {
+          const description = document.createElement('div');
+          description.classList.add('card-description');
+          description.textContent = item.description;
+          card.appendChild(description);
+        }
+
+        card.addEventListener('click', () => handleCardClick(item, type));
+        return card;
+      }
+
+      // 处理卡片点击事件
+      function handleCardClick(item, type) {
+        // 清除所有选中状态
+        document.querySelectorAll(`.selection-card[data-type="${type}"]`).forEach(card => {
+          card.classList.remove('selected');
+        });
+        // 设置当前选中状态
+        const clickedCard = document.querySelector(`.selection-card[data-type="${type}"][data-id="${item.id}"]`);
+        if (clickedCard) {
+          clickedCard.classList.add('selected');
+        }
+
+        if (type === 'device') {
+          selectedDevice = item;
+          selectedFirmware = null;
+          selectedVersion = null;
+          renderFirmwares();
+          firmwareSelection.classList.remove('invisible');
+          versionSelection.classList.add('invisible');
+          installButton.classList.remove('visible');
+          installButton.classList.add('invisible');
+        } else if (type === 'firmware') {
+          selectedFirmware = item;
+          selectedVersion = null;
+          renderVersions();
+          versionSelection.classList.remove('invisible');
+          installButton.classList.remove('visible');
+          installButton.classList.add('invisible');
+        } else if (type === 'version') {
+          selectedVersion = item;
+          if (selectedVersion && selectedVersion.manifest_path) {
+            installButton.manifest = selectedVersion.manifest_path;
+            installButton.classList.remove('invisible');
+            installButton.classList.add('visible');
+          } else {
+            installButton.classList.remove('visible');
+            installButton.classList.add('invisible');
+          }
+        }
+      }
+
+      // 渲染设备卡片
+      function renderDevices() {
+        deviceCardsContainer.innerHTML = '';
+        configData.devices.forEach(device => {
+          deviceCardsContainer.appendChild(createCard(device, 'device'));
+        });
+      }
+
+      // 渲染固件卡片
+      function renderFirmwares() {
+        firmwareCardsContainer.innerHTML = '';
+        if (selectedDevice && selectedDevice.firmwares) {
+          selectedDevice.firmwares.forEach(firmware => {
+            firmwareCardsContainer.appendChild(createCard(firmware, 'firmware'));
+          });
+        }
+      }
+
+      // 渲染版本卡片
+      function renderVersions() {
+        versionCardsContainer.innerHTML = '';
+        if (selectedFirmware && selectedFirmware.versions) {
+          selectedFirmware.versions.forEach(version => {
+            versionCardsContainer.appendChild(createCard(version, 'version'));
+          });
+        }
+      }
+
+      // 异步加载配置数据
+      async function loadConfig() {
+        try {
+          const response = await fetch('firmware/config.json');
+          configData = await response.json();
+          renderDevices();
+        } catch (error) {
+          console.error('加载配置失败:', error);
+          deviceCardsContainer.innerHTML = '<p>加载设备信息失败。</p>';
+        }
+      }
+
+      // 页面加载时初始化
+      document.addEventListener('DOMContentLoaded', loadConfig);
+
+      // 处理卡片容器滚动
+      function handleScroll(containerId, direction) {
+        const container = document.getElementById(containerId);
+        const scrollAmount = container.clientWidth / 2; // 每次滚动半个容器宽度
+
+        if (direction === 'left') {
+          container.scrollBy({
+            left: -scrollAmount,
+            behavior: 'smooth'
+          });
+        } else {
+          container.scrollBy({
+            left: scrollAmount,
+            behavior: 'smooth'
+          });
+        }
+      }
+
+      // 绑定导航按钮事件
+      document.querySelectorAll('.nav-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const targetContainerId = event.target.dataset.target;
+          const direction = event.target.classList.contains('left') ? 'left' : 'right';
+          handleScroll(targetContainerId, direction);
+        });
+      });
+
 
       // --- 这是新增的主题切换逻辑 ---
       const themeToggle = document.getElementById('theme-toggle');
