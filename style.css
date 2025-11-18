@@ -388,6 +388,54 @@ body.light-mode .action-btn:not(:disabled):hover {
     color: var(--background-color);
 }
 
+.logging-wrapper {
+    width: 450px;
+    max-width: 100%;
+    margin-top: 1rem;
+}
+
+.secondary-btn-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.secondary-btn {
+    flex: 1;
+    background-color: var(--surface-color);
+    color: var(--primary-text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.8rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.secondary-btn:hover:not(:disabled) {
+    background-color: var(--primary-accent-color);
+    color: var(--background-color);
+    border-color: var(--primary-accent-color);
+}
+
+.secondary-btn:disabled {
+    background-color: var(--disabled-color);
+    color: var(--disabled-text-color);
+    border-color: var(--disabled-color);
+    cursor: not-allowed;
+}
+
+
+.logging-wrapper p {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    margin-top: 1rem;
+}
+
 
 
 
@@ -432,4 +480,43 @@ footer {
     .step-content { width: 100%; }
     .step-button.selected { text-align: center; }
     header { flex-direction: column; gap: 1rem; }
+}
+
+/* --- Baud Rate and Terminal --- */
+.baud-rate-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    width: 450px;
+    max-width: 100%;
+}
+
+.baud-rate-container label {
+    font-weight: 500;
+    color: var(--secondary-text-color);
+}
+
+.baud-rate-container select {
+    width: auto;
+    min-width: 150px;
+}
+
+.terminal-section {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 1100px;
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+    animation-delay: 0.8s;
+}
+
+#terminal-container {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 0.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }

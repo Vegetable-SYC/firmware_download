@@ -4,8 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectDeviceBtn = document.getElementById('select-device-btn');
     const firmwareSelect = document.getElementById('firmware-select');
     const versionSelect = document.getElementById('version-select');
-    const connectBtn = document.getElementById('connect-btn');
+    const baudRateSelect = document.getElementById('baud-rate-select');
     const themeSwitcher = document.getElementById('theme-switcher');
+    
+    // Action Buttons
+    const connectBtn = document.getElementById('connect-btn');
+    const flashBtn = document.getElementById('flash-btn');
+    const startLoggingBtn = document.getElementById('start-logging-btn');
+    const downloadLogsBtn = document.getElementById('download-logs-btn');
 
     // Modal Elements
     const deviceModal = document.getElementById('device-modal');
@@ -18,13 +24,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const step2 = document.getElementById('step-2');
     const step3 = document.getElementById('step-3');
 
+    // Terminal Elements
+    const terminalSection = document.getElementById('terminal-section');
+    const terminalContainer = document.getElementById('terminal-container');
+
     // --- State ---
     let appConfig = null;
     let selectedDevice = null;
     let selectedFirmware = null;
     let selectedVersion = null;
+    
+    let device = null;
+    let transport = null;
+    let esploader = null;
+    let isConnecting = false;
+    let isLogging = false;
+    let logData = '';
+    const term = new Terminal({ convertEol: true });
 
-    // --- Functions ---
+    // --- Main Functions ---
 
     function toggleModal() {
         deviceModal.classList.toggle('is-visible');
@@ -88,8 +106,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateButtonStates() {
+        const isConnected = transport && transport.connected;
         const canFlash = selectedDevice && selectedFirmware && selectedVersion;
-        connectBtn.disabled = !canFlash;
+
+        if (isConnected) {
+            connectBtn.innerHTML = '<i class="fas fa-plug-circle-xmark"></i> Disconnect';
+            connectBtn.disabled = isConnecting;
+        } else {
+            connectBtn.innerHTML = isConnecting ? '<i class="fas fa-spinner fa-spin"></i> Connecting...' : '<i class="fas fa-link"></i> Connect';
+            connectBtn.disabled = isConnecting;
+        }
+
+        flashBtn.disabled = isConnecting || !isConnected || !canFlash;
+        startLoggingBtn.disabled = isConnecting || !isConnected;
+        downloadLogsBtn.disabled = isLogging || logData.length === 0;
     }
 
     // --- Theme Switching ---
@@ -111,13 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- ESPTOOL-JS Flashing Logic ---
+    // --- ESPTOOL-JS Logic ---
 
-    /**
-     * Converts an ArrayBuffer to a binary string.
-     * @param {ArrayBuffer} buffer The buffer to convert.
-     * @returns {string} The binary string.
-     */
     function arrayBufferToBinaryString(buffer) {
         let binary = '';
         const bytes = new Uint8Array(buffer);
@@ -128,48 +153,73 @@ document.addEventListener('DOMContentLoaded', () => {
         return binary;
     }
 
-    const handleConnectAndFlash = async () => {
-        if (!selectedVersion) {
-            alert("Please select a device, firmware, and version first.");
-            return;
-        }
-
-        connectBtn.disabled = true;
-        connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
-
-        // ESPLoader is loaded from the script tag in index.html
-        const ESPLoader = window.ESPLoader;
-        let device;
-        let transport;
-        let esploader;
-
-        const espLoaderTerminal = {
-            clean() {},
-            writeLine(data) { console.log(data); },
-            write(data) { console.log(data); },
-        };
+    const handleConnect = async () => {
+        isConnecting = true;
+        updateButtonStates();
 
         try {
-            // Request port and connect
             device = await navigator.serial.requestPort({});
-            transport = new ESPLoader.Transport(device);
+            transport = new Transport(device);
+            
+            const loaderTerminal = {
+                clean() {},
+                writeLine(data) { console.log(data); },
+                write(data) { console.log(data); },
+            };
+
             esploader = new ESPLoader({
                 transport,
-                baudrate: 921600, // A common high baud rate
-                terminal: espLoaderTerminal,
+                baudrate: parseInt(baudRateSelect.value, 10),
+                terminal: loaderTerminal,
             });
 
-            // Handshake with device
             const chip = await esploader.main();
             console.log("Connected to", chip);
 
-            // Fetch the manifest file
+        } catch (error) {
+            console.error(error);
+            alert(`Error connecting: ${error.message}`);
+            await handleDisconnect();
+        } finally {
+            isConnecting = false;
+            updateButtonStates();
+        }
+    };
+
+    const handleDisconnect = async () => {
+        if (isLogging) {
+            isLogging = false; // Force stop
+        }
+        if (transport) {
+            await transport.disconnect();
+        }
+        transport = null;
+        esploader = null;
+        device = null;
+        console.log("Disconnected.");
+        startLoggingBtn.innerHTML = '<i class="far fa-file-alt"></i> Start Logging';
+        terminalSection.style.display = 'none';
+        updateButtonStates();
+    };
+
+    const handleFlash = async () => {
+        if (!esploader || !transport.connected) {
+            alert("Not connected. Please connect to a device first.");
+            return;
+        }
+        if (!selectedVersion) {
+            alert("Please select a firmware version to flash.");
+            return;
+        }
+
+        flashBtn.disabled = true;
+        flashBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+
+        try {
             const manifestPath = selectedVersion.manifest_path;
             const manifestResponse = await fetch(manifestPath);
             const manifest = await manifestResponse.json();
 
-            // Prepare files for flashing
-            connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing files...';
             const filePromises = manifest.builds[0].parts.map(async (part) => {
                 const partResponse = await fetch(part.path);
                 const binary = await partResponse.arrayBuffer();
@@ -178,37 +228,77 @@ document.addEventListener('DOMContentLoaded', () => {
                     address: part.offset,
                 };
             });
-
             const fileArray = await Promise.all(filePromises);
 
-            // Flash the device
-            connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Flashing...';
             await esploader.writeFlash({
                 fileArray: fileArray,
-                eraseAll: false, // Set to true if you want to erase the entire flash
+                eraseAll: false,
                 compress: true,
                 reportProgress: (fileIndex, written, total) => {
                     const progress = Math.round((written / total) * 100);
-                    console.log(`Flashing file ${fileIndex + 1}/${fileArray.length}: ${progress}%`);
-                    connectBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Flashing... ${progress}%`;
+                    flashBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Flashing... ${progress}%`;
                 },
             });
-
             alert("Flashing complete!");
 
         } catch (error) {
             console.error(error);
-            alert(`Error: ${error.message}`);
+            alert(`Flashing failed: ${error.message}`);
         } finally {
-            // Disconnect from the device
-            if (transport) {
-                await transport.disconnect();
-            }
-            connectBtn.disabled = false;
-            connectBtn.innerHTML = '<i class="fas fa-link"></i> Connect';
+            flashBtn.disabled = false;
+            flashBtn.innerHTML = '<i class="fas fa-bolt"></i> Start Flashing';
+            updateButtonStates();
         }
     };
 
+    const handleLogging = async () => {
+        if (!transport || !transport.connected) {
+            alert("Not connected. Please connect to a device first.");
+            return;
+        }
+
+        isLogging = !isLogging;
+        updateButtonStates();
+
+        if (isLogging) {
+            startLoggingBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Logging';
+            terminalSection.style.display = 'block';
+            logData = '';
+            term.clear();
+            
+            while (isLogging) {
+                try {
+                    const { value, done } = await transport.rawRead();
+                    if (done) {
+                        isLogging = false;
+                        break;
+                    }
+                    if (value) {
+                        term.write(value);
+                        logData += new TextDecoder().decode(value);
+                    }
+                } catch (e) {
+                    console.error("Logging error:", e);
+                    isLogging = false;
+                }
+            }
+            updateButtonStates();
+        } else {
+            startLoggingBtn.innerHTML = '<i class="far fa-file-alt"></i> Start Logging';
+        }
+    };
+
+    const handleDownloadLogs = () => {
+        const blob = new Blob([logData], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `esp-log-${new Date().toISOString()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
 
     // --- Event Listeners ---
 
@@ -254,13 +344,23 @@ document.addEventListener('DOMContentLoaded', () => {
         updateButtonStates();
     });
 
-    connectBtn.addEventListener('click', handleConnectAndFlash);
+    connectBtn.addEventListener('click', () => {
+        if (transport && transport.connected) {
+            handleDisconnect();
+        } else {
+            handleConnect();
+        }
+    });
+    flashBtn.addEventListener('click', handleFlash);
+    startLoggingBtn.addEventListener('click', handleLogging);
+    downloadLogsBtn.addEventListener('click', handleDownloadLogs);
 
     /**
      * Main initialization function.
      */
     async function initializeApp() {
-        loadTheme(); // Load theme first
+        loadTheme();
+        term.open(terminalContainer);
         try {
             const response = await fetch('firmware/config.json');
             if (!response.ok) {
@@ -268,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             appConfig = await response.json();
             renderDeviceCarousel();
+            updateButtonStates(); // Initial button state
         } catch (error) {
             console.error('Failed to load or parse firmware/config.json:', error);
             alert('Fatal Error: Could not load device configuration. Please check the console.');
