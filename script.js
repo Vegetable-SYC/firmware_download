@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             device = await navigator.serial.requestPort({});
-            transport = new Transport(device);
+            transport = new esptoolJs.Transport(device);
             
             const loaderTerminal = {
                 clean() {},
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 write(data) { console.log(data); },
             };
 
-            esploader = new ESPLoader({
+            esploader = new esptoolJs.ESPLoader({
                 transport,
                 baudrate: parseInt(baudRateSelect.value, 10),
                 terminal: loaderTerminal,
