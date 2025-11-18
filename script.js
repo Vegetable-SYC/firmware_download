@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const firmwareSelect = document.getElementById('firmware-select');
     const versionSelect = document.getElementById('version-select');
     const connectBtn = document.getElementById('connect-btn');
-    const installButton = document.getElementById('install-button');
     const themeSwitcher = document.getElementById('theme-switcher');
 
     // Modal Elements
@@ -91,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateButtonStates() {
         const canFlash = selectedDevice && selectedFirmware && selectedVersion;
         connectBtn.disabled = !canFlash;
-        installButton.manifest = canFlash ? selectedVersion.manifest_path : '';
     }
 
     // --- Theme Switching ---
@@ -112,6 +110,105 @@ document.addEventListener('DOMContentLoaded', () => {
             setTheme('light');
         }
     }
+
+    // --- ESPTOOL-JS Flashing Logic ---
+
+    /**
+     * Converts an ArrayBuffer to a binary string.
+     * @param {ArrayBuffer} buffer The buffer to convert.
+     * @returns {string} The binary string.
+     */
+    function arrayBufferToBinaryString(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return binary;
+    }
+
+    const handleConnectAndFlash = async () => {
+        if (!selectedVersion) {
+            alert("Please select a device, firmware, and version first.");
+            return;
+        }
+
+        connectBtn.disabled = true;
+        connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+
+        // ESPLoader is loaded from the script tag in index.html
+        const ESPLoader = window.ESPLoader;
+        let device;
+        let transport;
+        let esploader;
+
+        const espLoaderTerminal = {
+            clean() {},
+            writeLine(data) { console.log(data); },
+            write(data) { console.log(data); },
+        };
+
+        try {
+            // Request port and connect
+            device = await navigator.serial.requestPort({});
+            transport = new ESPLoader.Transport(device);
+            esploader = new ESPLoader({
+                transport,
+                baudrate: 921600, // A common high baud rate
+                terminal: espLoaderTerminal,
+            });
+
+            // Handshake with device
+            const chip = await esploader.main();
+            console.log("Connected to", chip);
+
+            // Fetch the manifest file
+            const manifestPath = selectedVersion.manifest_path;
+            const manifestResponse = await fetch(manifestPath);
+            const manifest = await manifestResponse.json();
+
+            // Prepare files for flashing
+            connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing files...';
+            const filePromises = manifest.builds[0].parts.map(async (part) => {
+                const partResponse = await fetch(part.path);
+                const binary = await partResponse.arrayBuffer();
+                return {
+                    data: arrayBufferToBinaryString(binary),
+                    address: part.offset,
+                };
+            });
+
+            const fileArray = await Promise.all(filePromises);
+
+            // Flash the device
+            connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Flashing...';
+            await esploader.writeFlash({
+                fileArray: fileArray,
+                eraseAll: false, // Set to true if you want to erase the entire flash
+                compress: true,
+                reportProgress: (fileIndex, written, total) => {
+                    const progress = Math.round((written / total) * 100);
+                    console.log(`Flashing file ${fileIndex + 1}/${fileArray.length}: ${progress}%`);
+                    connectBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Flashing... ${progress}%`;
+                },
+            });
+
+            alert("Flashing complete!");
+
+        } catch (error) {
+            console.error(error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            // Disconnect from the device
+            if (transport) {
+                await transport.disconnect();
+            }
+            connectBtn.disabled = false;
+            connectBtn.innerHTML = '<i class="fas fa-link"></i> Connect';
+        }
+    };
+
 
     // --- Event Listeners ---
 
@@ -157,15 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateButtonStates();
     });
 
-    connectBtn.addEventListener('click', () => {
-        const activateButton = installButton.shadowRoot?.querySelector('button');
-        if (activateButton) {
-            activateButton.click();
-        } else {
-            console.error('Could not find the activate button in esp-web-tools component.');
-            alert('Error: Flashing component is not ready.');
-        }
-    });
+    connectBtn.addEventListener('click', handleConnectAndFlash);
 
     /**
      * Main initialization function.
