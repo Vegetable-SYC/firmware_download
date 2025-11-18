@@ -6,7 +6,6 @@
     <title>BITRONICS - Web Flasher</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.19.0/css/xterm.css">
     <link rel="icon" href="freenove.ico" type="image/x-icon">
 </head>
 <body>
@@ -65,29 +64,8 @@
         </section>
 
         <section class="actions">
-            <div class="baud-rate-container">
-                <label for="baud-rate-select">Baud Rate:</label>
-                <select id="baud-rate-select">
-                    <option value="921600">921600</option>
-                    <option value="460800">460800</option>
-                    <option value="230400">230400</option>
-                    <option value="115200" selected>115200</option>
-                </select>
-            </div>
-            <button id="connect-btn" class="action-btn"><i class="fas fa-link"></i> Connect</button>
-            <button id="flash-btn" class="action-btn" disabled><i class="fas fa-bolt"></i> Start Flashing</button>
-
-            <div class="logging-wrapper">
-                <div class="secondary-btn-group">
-                    <button id="start-logging-btn" class="secondary-btn" disabled><i class="far fa-file-alt"></i> Start Logging</button>
-                    <button id="download-logs-btn" class="secondary-btn" disabled><i class="fas fa-download"></i> Download Logs</button>
-                </div>
-                <p>View device logs in real-time or download them for offline analysis.</p>
-            </div>
-        </section>
-
-        <section id="terminal-section" class="terminal-section" style="display: none;">
-            <div id="terminal-container"></div>
+            <button id="connect-btn" class="action-btn" disabled><i class="fas fa-link"></i> Connect</button>
+            <esp-web-install-button id="install-button" style="display: none;"></esp-web-install-button>
         </section>
     </main>
 
@@ -124,8 +102,7 @@
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/xterm@4.19.0/lib/xterm.min.js"></script>
-    <script src="https://unpkg.com/esptool-js@0.5.0/bundle.js"></script>
+    <script type="module" src="https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module"></script>
     <script src="script.js"></script>
 </body>
 </html>
