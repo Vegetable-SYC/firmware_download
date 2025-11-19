@@ -579,3 +579,71 @@ footer {
         justify-self: center; /* 波特率选择器和擦除复选框在小屏幕上居中 */
     }
 }
+
+/* 1. 模态框容器：保持高度，防止溢出 */
+.serial-monitor-modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 85vh !important; 
+    max-height: 900px !important;
+    overflow: hidden !important;
+}
+
+/* 2. 模态框主体：传递高度 */
+.serial-info-modal .modal-main {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important; 
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+/* 3. 内容包装层：增加舒适的内边距 */
+.serial-info-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    /* [修改点] 上:1.5rem, 左右:2.5rem, 下:2.5rem -> 让黑框不那么贴边，显得更高级 */
+    padding: 1.5rem 2.5rem 2.5rem 2.5rem !important;
+    box-sizing: border-box !important;
+}
+
+/* 4. 波特率选择器区域：增加与黑框的距离 */
+.serial-info-content .baud-rate-selector {
+    /* [修改点] 增加底部边距，把黑框往下推一点 */
+    margin-bottom: 1.25rem !important; 
+    flex-shrink: 0 !important;
+}
+
+/* 5. 黑色终端外壳：视觉优化 */
+.serial-monitor-terminal {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 0 !important;
+    min-height: 200px !important;
+    
+    /* [修改点] 边框颜色稍微浅一点，圆角稍微大一点 */
+    border: 1px solid rgba(0, 0, 0, 0.1) !important; /* 更细腻的边框 */
+    border-radius: 10px !important; /* 更圆润的角 */
+    
+    overflow: hidden !important;
+    background-color: #000;
+    /* [修改点] 加一点淡淡的阴影，增加层次感 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 深色模式下的边框适配 */
+body:not(.light-mode) .serial-monitor-terminal {
+    border: 1px solid var(--border-color) !important;
+}
+
+/* 6. 内部全屏拉伸 */
+.serial-monitor-terminal > div, 
+.serial-monitor-terminal .xterm-screen,
+.serial-monitor-terminal canvas {
+    height: 100% !important;
+    width: 100% !important;
+}
