@@ -1,4 +1,4 @@
-import { ESPLoader, Transport } from './esptool-js-main/bundle.js';
+import { ESPLoader, Transport } from './esptool-js/bundle.js';
 import { Terminal } from 'https://cdn.jsdelivr.net/npm/xterm@5.3.0/+esm';
 import { FitAddon } from 'https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/+esm';
 
