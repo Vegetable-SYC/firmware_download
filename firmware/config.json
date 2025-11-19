@@ -42,7 +42,7 @@
       "image": "firmware/FNK0103/FNK0103.png",
       "firmwares": [
         {
-          "id": "firmware_1",
+          "id": "WS2812",
           "name": "WS2812",
           "versions": [
             {
