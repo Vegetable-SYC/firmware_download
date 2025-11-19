@@ -43,7 +43,7 @@
       "firmwares": [
         {
           "id": "firmware_1",
-          "name": "Default Firmware",
+          "name": "WS2812",
           "versions": [
             {
               "id": "v1.0",
