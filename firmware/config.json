@@ -1,58 +1,72 @@
 {
   "devices": [
     {
-      "id": "esp32s3",
-      "name": "ESP32-S3",
-      "image": "freenove.ico",
+      "id": "xiaozhi_1.14inch",
+      "name": "Xiaozhi 1.14inch",
+      "image": "firmware/xiaozhi_1.14inch_device/xiaozhi_1.14inch.png",
       "firmwares": [
         {
-          "id": "xiaozhi_1.14",
-          "name": "Xiaozhi 1.14inch",
+          "id": "firmware_1",
+          "name": "Default Firmware",
           "versions": [
             {
-              "id": "1.0",
+              "id": "v1.0",
               "name": "v1.0",
-              "manifest_path": "firmware/xiaozhi_1.14inch.json"
-            }
-          ]
-        },
-        {
-          "id": "xiaozhi_3.5",
-          "name": "Xiaozhi 3.5inch",
-          "versions": [
-            {
-              "id": "1.0",
-              "name": "v1.0",
-              "manifest_path": "firmware/xiaozhi_3.5inch.json"
+              "manifest_path": "firmware/xiaozhi_1.14inch_device/firmwares/v1.0/v1.0.json"
             }
           ]
         }
       ]
     },
     {
-      "id": "esp32wroom",
-      "name": "ESP32-WROOM",
-      "image": "freenove.ico",
+      "id": "xiaozhi_3.5inch",
+      "name": "Xiaozhi 3.5inch",
+      "image": "firmware/xiaozhi_3.5inch_device/xiaozhi_3.5inch.png",
       "firmwares": [
         {
-          "id": "test1",
-          "name": "test1",
+          "id": "firmware_1",
+          "name": "Default Firmware",
           "versions": [
             {
-              "id": "1.0.0",
-              "name": "v1.0.0",
-              "manifest_path": "firmware/test1.json"
+              "id": "v1.0",
+              "name": "v1.0",
+              "manifest_path": "firmware/xiaozhi_3.5inch_device/firmwares/v1.0/v1.0.json"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "id": "test1",
+      "name": "测试1",
+      "image": "firmware/test1_device/test1.png",
+      "firmwares": [
         {
-          "id": "test2",
-          "name": "test2",
+          "id": "firmware_1",
+          "name": "Default Firmware",
           "versions": [
             {
-              "id": "1.0.0",
+              "id": "v1.0.0",
               "name": "v1.0.0",
-              "manifest_path": "firmware/test2.json"
+              "manifest_path": "firmware/test1_device/firmwares/v1.0/v1.0.0.json"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "test2",
+      "name": "测试2",
+      "image": "firmware/test2_device/test2.png",
+      "firmwares": [
+        {
+          "id": "firmware_1",
+          "name": "Default Firmware",
+          "versions": [
+            {
+              "id": "v1.0.0",
+              "name": "v1.0.0",
+              "manifest_path": "firmware/test2_device/firmwares/v1.0/v1.0.0.json"
             }
           ]
         }

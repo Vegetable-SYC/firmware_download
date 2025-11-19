@@ -1,4 +1,6 @@
 import { ESPLoader, Transport } from './esptool-js-main/bundle.js';
+import { Terminal } from 'https://cdn.jsdelivr.net/npm/xterm@5.3.0/+esm';
+import { FitAddon } from 'https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/+esm';
 
 // Initialize xterm.js terminal
 const terminalElement = document.getElementById('terminal-log');
@@ -11,7 +13,21 @@ const term = new Terminal({
         foreground: '#0F0'
     }
 });
+const fitAddon = new FitAddon(); // Instantiate FitAddon
+term.loadAddon(fitAddon); // Load FitAddon
 term.open(terminalElement);
+fitAddon.fit(); // Fit the terminal to its container initially
+
+// New terminal for the serial monitor
+const serialMonitorTerminal = new Terminal({
+    convertEol: true,
+    theme: {
+        background: '#1E1E1E',
+        foreground: '#FFFFFF'
+    }
+});
+const monitorFitAddon = new FitAddon();
+serialMonitorTerminal.loadAddon(monitorFitAddon);
 
 // Custom terminal to log output to xterm.js terminal
 const consoleTerminal = {
@@ -23,12 +39,72 @@ const consoleTerminal = {
 let esploader = null;
 let transport = null;
 let device = null; // The SerialPort object
+let isMonitoring = false;
+let monitorReader = null;
+
+async function readLoopForMonitor() {
+    if (!transport || !transport.device.readable) return;
+
+    try {
+        monitorReader = transport.device.readable.getReader();
+        while (true) {
+            const { value, done } = await monitorReader.read();
+            if (done) {
+                break; // Reader was cancelled
+            }
+            serialMonitorTerminal.write(value);
+        }
+    } catch (error) {
+        // This is expected when the reader is cancelled.
+    } finally {
+        if (monitorReader) {
+            monitorReader.releaseLock();
+            monitorReader = null;
+        }
+    }
+}
+
+async function startSerialMonitor() {
+    if (isMonitoring || !transport) return;
+    isMonitoring = true;
+
+    // Release the lock from esploader's transport if it's held
+    if (transport.reader) {
+        try {
+            await transport.reader.cancel();
+            transport.reader.releaseLock();
+        } catch(e) { /* Ignore */ }
+        transport.reader = undefined;
+    }
+    
+    transport.slipReaderEnabled = false; // Switch to raw mode
+    readLoopForMonitor(); // Do not await, let it run in the background
+}
+
+async function stopSerialMonitor() {
+    if (!isMonitoring) return;
+    isMonitoring = false;
+
+    if (monitorReader) {
+        try {
+            await monitorReader.cancel();
+        } catch (error) {
+            // Ignore cancel error
+        }
+    }
+    
+    if (transport) {
+        transport.slipReaderEnabled = true; // Switch back to SLIP mode for esptool
+    }
+}
+
 
 // Function to initialize ESPLoader
 async function initESPLoader(baudrate) {
+
     try {
         consoleTerminal.clean(); // Clear terminal on new connection attempt
-        consoleTerminal.writeLine("尝试连接设备...");
+        consoleTerminal.writeLine("Attempting to connect...");
         if (device === null) {
             // Request a serial port from the user
             device = await navigator.serial.requestPort();
@@ -39,18 +115,19 @@ async function initESPLoader(baudrate) {
             transport,
             baudrate: baudrate,
             terminal: consoleTerminal,
-            debugLogging: true, // Enable debug logging
+            debugLogging: false, // Disable debug logging
             flashSize: "detect", // Let esptool-js detect flash size
         };
         esploader = new ESPLoader(flashOptions);
 
         // Connect and detect chip
         const chipName = await esploader.main();
-        consoleTerminal.writeLine(`ESPLoader 初始化成功，检测到芯片: ${chipName}`);
+        consoleTerminal.writeLine(`ESPLoader initialized. Detected chip: ${chipName}`);
         return chipName;
     } catch (error) {
         console.error("Failed to initialize ESPLoader:", error);
-        consoleTerminal.writeLine(`连接失败: ${error.message}`);
+        consoleTerminal.writeLine(`Connection failed: ${error.message}`);
+        consoleTerminal.writeLine("Please ensure the device is in download mode (hold BOOT, press/release RESET, then release BOOT).");
         // Ensure device and transport are cleared on any failure during init
         if (transport) {
             await transport.disconnect();
@@ -64,14 +141,18 @@ async function initESPLoader(baudrate) {
 
 // Function to disconnect
 async function disconnectESPLoader() {
-    consoleTerminal.writeLine("[DEBUG] disconnectESPLoader called.");
-    if (transport) {
-        await transport.disconnect();
+    try {
+        if (transport) {
+            await transport.disconnect();
+        }
+    } catch (error) {
+        console.error("Error during disconnect:", error);
+    } finally {
+        transport = null;
+        device = null;
+        esploader = null;
+        consoleTerminal.writeLine("ESPLoader 已断开连接。");
     }
-    device = null;
-    transport = null;
-    esploader = null;
-    consoleTerminal.writeLine("ESPLoader 已断开连接。");
 }
 
 // Function to fetch binary data
@@ -89,21 +170,23 @@ async function fetchBinaryFile(filePath) {
 // Main flashing function
 async function startFlashing(selectedVersion, eraseFlash) {
     if (!esploader) {
-        consoleTerminal.writeLine("ESPLoader 未初始化。请先连接设备。");
-        throw new Error("ESPLoader 未初始化。请先连接设备。");
+        consoleTerminal.writeLine("ESPLoader is not initialized. Please connect a device first.");
+        throw new Error("ESPLoader is not initialized. Please connect a device first.");
     }
 
     try {
         consoleTerminal.clean(); // Clear terminal before flashing
-        consoleTerminal.writeLine("开始烧录...");
+        consoleTerminal.writeLine("Starting flashing process...");
 
         if (eraseFlash) {
-            consoleTerminal.writeLine("正在擦除整个闪存...");
+            consoleTerminal.writeLine("Erasing flash (this may take a while)...");
             await esploader.eraseFlash();
-            consoleTerminal.writeLine("闪存擦除完成。");
+            consoleTerminal.writeLine("Flash erase complete.");
         }
 
-        const manifestResponse = await fetch(selectedVersion.manifest_path);
+        const manifestPath = selectedVersion.manifest_path;
+        const basePath = manifestPath.substring(0, manifestPath.lastIndexOf('/') + 1);
+        const manifestResponse = await fetch(manifestPath);
         if (!manifestResponse.ok) {
             throw new Error(`Failed to fetch manifest: ${manifestResponse.statusText}`);
         }
@@ -112,10 +195,28 @@ async function startFlashing(selectedVersion, eraseFlash) {
         const fileArray = [];
         for (const build of manifest.builds) {
             for (const part of build.parts) {
-                const binaryData = await fetchBinaryFile(`firmware/${part.path}`);
+                const binaryPath = `${basePath}${part.path}`;
+                consoleTerminal.writeLine(`Fetching ${part.path} at 0x${part.offset.toString(16)}...`);
+                const binaryData = await fetchBinaryFile(binaryPath);
                 fileArray.push({ data: binaryData, address: part.offset });
             }
         }
+
+        let lastProgressLine = "";
+        const progressBar = (fileIndex, written, total) => {
+            const fileName = fileArray[fileIndex].data.length > 0 ? `File ${fileIndex + 1}/${fileArray.length}` : `Empty file ${fileIndex + 1}/${fileArray.length}`;
+            const percentage = ((written / total) * 100).toFixed(0);
+            const progressBarLength = 20;
+            const filled = Math.round(progressBarLength * (written / total));
+            const empty = progressBarLength - filled;
+            const bar = '[' + '█'.repeat(filled) + '-'.repeat(empty) + ']';
+            
+            const newLine = `\r${fileName} ${bar} ${percentage}% `;
+            if (newLine !== lastProgressLine) {
+                consoleTerminal.write(newLine + " ".repeat(Math.max(0, lastProgressLine.length - newLine.length))); // Overwrite previous line
+                lastProgressLine = newLine;
+            }
+        };
 
         const flashOptions = {
             fileArray: fileArray,
@@ -123,20 +224,17 @@ async function startFlashing(selectedVersion, eraseFlash) {
             compress: true, // Use compression for faster flashing
             flashMode: "keep", // Keep existing flash mode
             flashFreq: "keep", // Keep existing flash frequency
-            reportProgress: (fileIndex, written, total) => {
-                const progress = (written / total) * 100;
-                consoleTerminal.writeLine(`文件 ${fileIndex + 1} 进度: ${progress.toFixed(2)}%`);
-            },
+            reportProgress: progressBar, // Use the new progress bar function
             calculateMD5Hash: (image) => window.CryptoJS.MD5(window.CryptoJS.enc.Latin1.parse(image)).toString(),
         };
 
         await esploader.writeFlash(flashOptions);
         await esploader.after(); // Perform post-flashing hard reset (default)
 
-        consoleTerminal.writeLine("烧录成功！");
+        consoleTerminal.writeLine("\n\rFlashing complete!");
     } catch (error) {
-        console.error("烧录失败:", error);
-        consoleTerminal.writeLine(`烧录失败: ${error.message}`);
+        console.error("Flashing failed:", error);
+        consoleTerminal.writeLine(`\n\rFlashing failed: ${error.message}`);
         throw error;
     }
 }
@@ -163,11 +261,12 @@ function getConnectedPort() {
     return device;
 }
 
-// Function to set onDisconnection callback
-function setOnDisconnectCallback(callback) {
-    if (device) {
-        device.onDisconnection = callback;
+// Function to change the baud rate
+async function changeBaudRate(newBaudRate) {
+    if (transport) {
+        await transport.disconnect();
+        await transport.connect(newBaudRate);
     }
 }
 
-export { initESPLoader, disconnectESPLoader, startFlashing, getSerialPortInfo, getConnectedPort, setOnDisconnectCallback, consoleTerminal };
+export { initESPLoader, disconnectESPLoader, startFlashing, getSerialPortInfo, getConnectedPort, consoleTerminal, fitAddon, changeBaudRate, serialMonitorTerminal, monitorFitAddon, startSerialMonitor, stopSerialMonitor };

@@ -45,9 +45,9 @@ body {
 }
 
 main {
-    max-width: 1100px;
+    max-width: 2000px;
     width: 100%;
-    padding: 1.5rem 2rem 5rem; /* Added padding-bottom */
+    padding: 1.5rem 2rem 1rem; /* Adjusted padding-bottom to move footer up further */
     box-sizing: border-box;
     flex-grow: 1;
 }
@@ -55,17 +55,31 @@ main {
 /* --- Header --- */
 header {
     width: 100%;
-    max-width: 1200px;
-    padding: 1.5rem 2rem;
+    max-width: 2000px;
+    padding: 1.5rem 5rem; /* Adjusted padding for better alignment */
     box-sizing: border-box;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+.hero {
+    margin-top: 4rem; /* Adjusted vertical spacing */
+}
+
+
+
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* 12px */
     font-size: 2rem;
     font-weight: 900;
+}
+
+.logo-icon {
+    height: 32px;
+    width: 32px;
 }
 
 .header-right {
@@ -118,7 +132,7 @@ nav {
     font-size: 1.25rem;
     color: var(--secondary-text-color);
     max-width: 600px;
-    margin: 1rem auto 0;
+    margin: 1rem auto 8rem; /* Adjusted vertical spacing */
     line-height: 1.6;
 }
 
@@ -126,8 +140,9 @@ nav {
 .stepper {
     display: flex;
     flex-direction: row; /* Arrange step cards horizontally */
-    gap: 5rem; /* Increased gap */
-    margin: 3rem 0;
+    gap: 10rem; /* Increased gap */
+    margin: 8rem 0; /* Adjusted vertical spacing */
+    justify-content: center; /* Added for centering */
     animation: fadeInUp 0.8s ease-out forwards;
     opacity: 0;
     animation-delay: 0.3s;
@@ -139,6 +154,7 @@ nav {
     border-radius: 12px;
     padding: 1.5rem; /* More vertical padding */
     flex: 1; /* Equal width for each step */
+    max-width: 300px; /* Increased card width */
     box-sizing: border-box;
     display: flex;
     flex-direction: column; /* Icon and content are stacked vertically */
@@ -267,12 +283,18 @@ body.light-mode select:not(:disabled) {
     background-color: var(--modal-surface-color);
     border-radius: 12px;
     width: 90%;
-    max-width: 900px;
+    max-width: 1200px; /* Increased width for device selection modal */
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
     transform: scale(0.95);
     transition: transform 0.3s ease;
+}
+
+.serial-monitor-modal-content {
+    max-width: 1400px; /* Increased width for serial monitor */
+    min-height: 70vh;
+    max-height: 90vh;
 }
 
 .modal-overlay.is-visible .modal-content {
@@ -296,7 +318,13 @@ body.light-mode select:not(:disabled) {
 }
 .close-btn:hover { color: var(--primary-text-color); transform: rotate(90deg); }
 
-.modal-main { display: flex; align-items: center; padding: 2rem 0; }
+.modal-main { display: flex; align-items: center; padding: 0 2rem; flex-grow: 1; }
+
+/* Specific style for serial monitor modal's main content */
+.serial-info-modal .modal-main {
+    flex-direction: column;
+    padding: 0;
+}
 
 .modal-nav-arrow {
     background: none; border: none; color: var(--secondary-text-color);
@@ -341,7 +369,7 @@ body.light-mode select:not(:disabled) {
 
 /* --- Action Buttons & Logging --- */
 .actions {
-    margin: 3rem 0;
+    margin: 2rem 0; /* Adjusted vertical spacing */
     animation: fadeInUp 0.8s ease-out forwards;
     opacity: 0;
     animation-delay: 0.6s;
@@ -350,8 +378,8 @@ body.light-mode select:not(:disabled) {
 .controls-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem 1.5rem; /* 1rem row-gap, 1.5rem column-gap */
-    max-width: 550px; /* A more reasonable max-width for the controls */
+    gap: 3rem 5rem; /* 3rem row-gap, 5rem column-gap */
+    max-width: 950px; /* A more reasonable max-width for the controls */
     margin: 0 auto; /* Center the grid */
     align-items: center; /* Vertically center items in each cell */
 }
@@ -451,6 +479,7 @@ label[for="erase-flash-checkbox"] {
     width: 100%;
     max-width: 1100px;
     text-align: left;
+    margin: 0 auto; /* Added for centering */
 }
 
 .terminal-section.hidden {
@@ -464,7 +493,7 @@ label[for="erase-flash-checkbox"] {
     border-radius: 8px;
     font-family: 'monospace', monospace;
     font-size: 0.9rem;
-    height: 340px; /* Increased height slightly */
+    height: 345px; /* Increased height to prevent clipping */
     overflow: hidden; /* Let xterm.js handle its own scrolling */
     border: 1px solid var(--border-color);
 }
@@ -479,30 +508,29 @@ body.light-mode #terminal-log {
 .serial-info-content {
     padding: 1rem 2rem;
     text-align: left;
-}
-
-.serial-info-content p {
-    margin-bottom: 0.5rem;
-}
-
-.serial-info-content strong {
-    color: var(--primary-text-color);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .serial-info-content .baud-rate-selector {
-    margin-top: 1.5rem;
+    margin-top: 0;
     justify-content: flex-start;
+    padding: 0; /* Changed from 0 2rem */
 }
 
-.serial-info-content .baud-rate-selector select {
-    min-width: 120px;
+.serial-monitor-terminal {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    flex-grow: 1;
+    margin-top: 1rem; /* Reduced from 1.5rem */
 }
 
 /* --- Footer --- */
 footer {
     width: 100%;
-    max-width: 1200px;
-    padding: 2rem;
+    max-width: 2000px; /* Adjusted to match header and main */
+    padding: 2rem 5rem; /* Adjusted padding for better alignment */
     box-sizing: border-box;
     border-top: 1px solid var(--border-color);
     display: flex;

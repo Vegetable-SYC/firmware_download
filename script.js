@@ -1,4 +1,4 @@
-import { initESPLoader, disconnectESPLoader, startFlashing, getSerialPortInfo, setOnDisconnectCallback, getConnectedPort, consoleTerminal } from './esptool-integration.js';
+import { initESPLoader, disconnectESPLoader, startFlashing, getSerialPortInfo, getConnectedPort, consoleTerminal, fitAddon, changeBaudRate, serialMonitorTerminal, monitorFitAddon, startSerialMonitor, stopSerialMonitor } from './esptool-integration.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const serialProductId = document.getElementById('serial-product-id');
     const serialBaudRateDisplay = document.getElementById('serial-baud-rate');
     const modalBaudRateSelect = document.getElementById('modal-baud-rate-select');
-    const applyBaudRateBtn = document.getElementById('apply-baud-rate-btn');
+    const toggleMonitorBtn = document.getElementById('toggle-monitor-btn');
 
     // Stepper Elements
     const step2 = document.getElementById('step-2');
@@ -40,12 +40,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFirmware = null;
     let selectedVersion = null;
     let isConnected = false;
+    let isMonitoring = false;
 
     // --- Functions ---
 
+    // Attach the serial monitor terminal
+    const serialMonitorTerminalElement = document.getElementById('serial-monitor-terminal');
+    serialMonitorTerminal.open(serialMonitorTerminalElement);
+
+
     function toggleModal(modalElement) {
         modalElement.classList.toggle('is-visible');
-        console.log(`[DEBUG] Toggling modal: ${modalElement.id}, is-visible: ${modalElement.classList.contains('is-visible')}`);
+        
     }
     
     function renderDeviceCarousel() {
@@ -70,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleDeviceSelection(device) {
-        console.log(`[DEBUG] handleDeviceSelection called for device: ${device.name}`);
+        
         selectedDevice = device;
         selectedFirmware = null;
         selectedVersion = null;
@@ -110,8 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateButtonStates() {
-        consoleTerminal.writeLine(`[DEBUG] updateButtonStates called. isConnected: ${isConnected}, selectedDevice: ${!!selectedDevice}, selectedFirmware: ${!!selectedFirmware}, selectedVersion: ${!!selectedVersion}`);
+        console.log("updateButtonStates called.");
+        console.log("Current isConnected:", isConnected);
         const canFlash = selectedDevice && selectedFirmware && selectedVersion;
+        console.log("Current canFlash:", canFlash);
         
         // Connect/Disconnect button
         connectBtn.disabled = !canFlash; // Disable until device, firmware, version are selected
@@ -120,13 +128,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             connectBtn.innerHTML = '<i class="fas fa-link"></i> Connect';
         }
+        console.log("Connect button disabled:", connectBtn.disabled);
 
         // Flash button
         flashBtn.disabled = !(isConnected && canFlash);
+        console.log("Flash button disabled:", flashBtn.disabled);
 
         // Serial Port Info button
         serialPortInfoBtn.disabled = !isConnected;
-        consoleTerminal.writeLine(`[DEBUG] Flash button disabled: ${flashBtn.disabled}, Serial Port Info button disabled: ${serialPortInfoBtn.disabled}`);
+        console.log("Serial Port Info button disabled:", serialPortInfoBtn.disabled);
     }
 
     // --- Theme Switching ---
@@ -150,15 +160,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
+    window.addEventListener('resize', () => {
+        if (serialInfoModal.classList.contains('is-visible')) {
+            monitorFitAddon.fit();
+        }
+        fitAddon.fit();
+    });
+
+    navigator.serial.addEventListener('disconnect', async (event) => {
+        console.log("Disconnect event fired.");
+        const connectedPort = getConnectedPort();
+        console.log("Connected Port (from getConnectedPort):", connectedPort);
+        console.log("Event Port:", event.port);
+
+        let isOurPortDisconnected = false;
+
+        if (event.port) {
+            // If event.port is defined, try to match by Vendor/Product ID
+            if (connectedPort) {
+                const connectedPortInfo = await getSerialPortInfo();
+                console.log("Connected Port Info:", connectedPortInfo);
+                console.log("Event Port Vendor ID:", event.port.usbVendorId);
+                console.log("Event Port Product ID:", event.port.usbProductId);
+
+                if (connectedPortInfo && event.port.usbVendorId && event.port.usbProductId &&
+                    connectedPortInfo.usbVendorId === `0x${event.port.usbVendorId.toString(16).padStart(4, '0')}` &&
+                    connectedPortInfo.usbProductId === `0x${event.port.usbProductId.toString(16).padStart(4, '0')}`) {
+                    isOurPortDisconnected = true;
+                }
+            }
+        } else {
+            // If event.port is undefined, assume it's our port if we think we're connected
+            console.log("Event Port is undefined. Assuming our port disconnected if isConnected is true.");
+            if (isConnected) {
+                isOurPortDisconnected = true;
+            }
+        }
+
+        if (isOurPortDisconnected) {
+            isConnected = false;
+            disconnectESPLoader();
+            consoleTerminal.writeLine("设备已断开连接。");
+            updateButtonStates();
+        } else {
+            console.log("Disconnect event: Conditions for port match not met or event.port undefined and not connected.");
+        }
+    });
+
     selectDeviceBtn.addEventListener('click', () => toggleModal(deviceModal));
     closeModalBtn.addEventListener('click', () => toggleModal(deviceModal));
     deviceModal.addEventListener('click', (e) => {
         if (e.target === deviceModal) toggleModal(deviceModal);
     });
 
-    closeSerialInfoModalBtn.addEventListener('click', () => toggleModal(serialInfoModal));
+    closeSerialInfoModalBtn.addEventListener('click', () => {
+        if (isMonitoring) {
+            stopSerialMonitor();
+            isMonitoring = false;
+            toggleMonitorBtn.textContent = 'Start Monitor';
+        }
+        toggleModal(serialInfoModal);
+    });
     serialInfoModal.addEventListener('click', (e) => {
-        if (e.target === serialInfoModal) toggleModal(serialInfoModal);
+        if (e.target === serialInfoModal) {
+            if (isMonitoring) {
+                stopSerialMonitor();
+                isMonitoring = false;
+                toggleMonitorBtn.textContent = 'Start Monitor';
+            }
+            toggleModal(serialInfoModal);
+        }
     });
 
     themeSwitcher.addEventListener('click', () => {
@@ -206,15 +277,6 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await initESPLoader(selectedBaudRate);
                 isConnected = true;
-                // Set up disconnect listener
-                const port = getConnectedPort();
-                if (port) {
-                    port.onDisconnection = () => { // Corrected event name
-                        consoleTerminal.writeLine("设备已断开连接。");
-                        isConnected = false;
-                        updateButtonStates();
-                    };
-                }
                 consoleTerminal.writeLine("设备已连接。");
             } catch (error) {
                 console.error("连接失败:", error);
@@ -226,6 +288,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             // Disconnect phase
+            if (isMonitoring) {
+                await stopSerialMonitor();
+                isMonitoring = false;
+                toggleMonitorBtn.textContent = 'Start Monitor';
+            }
             connectBtn.disabled = true;
             connectBtn.textContent = 'Disconnecting...';
             try {
@@ -243,21 +310,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     flashBtn.addEventListener('click', async () => {
+        console.log("Flash button clicked.");
         flashBtn.disabled = true;
+        connectBtn.disabled = true;
+        serialPortInfoBtn.disabled = true;
         flashBtn.textContent = 'Flashing...';
         const eraseFlashCheckbox = document.getElementById('erase-flash-checkbox');
         const shouldEraseFlash = eraseFlashCheckbox ? eraseFlashCheckbox.checked : false; // Get checkbox state
 
         try {
+            console.log("Starting flashing process...");
             await startFlashing(selectedVersion, shouldEraseFlash); // Pass the state
             consoleTerminal.writeLine("烧录成功！");
             isConnected = true; // Keep connected after flashing
+            console.log("Flashing successful. isConnected:", isConnected);
         } catch (error) {
             console.error("烧录失败:", error);
             consoleTerminal.writeLine("烧录失败: " + error.message);
+            console.log("Flashing failed. isConnected:", isConnected);
         } finally {
+            console.log("Flashing finally block executed.");
             flashBtn.disabled = false;
+            flashBtn.innerHTML = '<i class="fas fa-bolt"></i> Flash';
             updateButtonStates();
+            console.log("Flash button state updated.");
         }
     });
 
@@ -267,33 +343,43 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleConsoleBtn.innerHTML = '<i class="fas fa-terminal"></i> Open Console';
         } else {
             toggleConsoleBtn.innerHTML = '<i class="fas fa-terminal"></i> Close Console';
+            fitAddon.fit(); // Fit terminal when it becomes visible
         }
     });
 
     serialPortInfoBtn.addEventListener('click', async () => {
         if (!isConnected) return;
-        const info = await getSerialPortInfo();
-        if (info) {
-            serialVendorId.textContent = info.usbVendorId || 'N/A';
-            serialProductId.textContent = info.usbProductId || 'N/A';
-            serialBaudRateDisplay.textContent = info.baudRate || 'N/A';
-            modalBaudRateSelect.value = info.baudRate || '921600';
-            toggleModal(serialInfoModal);
-        } else {
-            consoleTerminal.writeLine("无法获取串口信息。");
-        }
+        
+        // Open the modal
+        toggleModal(serialInfoModal);
+        
+        // Clear and fit the terminal
+        serialMonitorTerminal.clear();
+        // Use a small timeout to ensure the modal is visible before fitting
+        setTimeout(() => monitorFitAddon.fit(), 100);
     });
 
-    applyBaudRateBtn.addEventListener('click', async () => {
-        const newBaudRate = parseInt(modalBaudRateSelect.value);
-        if (isConnected && newBaudRate) {
-            try {
-                await changeBaudRate(newBaudRate);
-                serialBaudRateDisplay.textContent = newBaudRate;
-                consoleTerminal.writeLine(`波特率已更改为 ${newBaudRate}`);
-            } catch (error) {
-                console.error("更改波特率失败:", error);
-                consoleTerminal.writeLine("更改波特率失败: " + error.message);
+    toggleMonitorBtn.addEventListener('click', async () => {
+        if (isMonitoring) {
+            // Stop monitoring
+            await stopSerialMonitor();
+            isMonitoring = false;
+            toggleMonitorBtn.textContent = 'Start Monitor';
+            serialMonitorTerminal.writeln("\n[MONITOR] Stopped.");
+        } else {
+            // Start monitoring
+            const newBaudRate = parseInt(modalBaudRateSelect.value);
+            if (isConnected && newBaudRate) {
+                try {
+                    serialMonitorTerminal.writeln(`[MONITOR] Starting with baud rate ${newBaudRate}...`);
+                    await changeBaudRate(newBaudRate);
+                    await startSerialMonitor();
+                    isMonitoring = true;
+                    toggleMonitorBtn.textContent = 'Stop Monitor';
+                } catch (error) {
+                    console.error("启动监视器失败:", error);
+                    serialMonitorTerminal.writeln(`[MONITOR] Failed to start: ${error.message}`);
+                }
             }
         }
     });
