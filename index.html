@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITRONICS - Web Flasher</title>
+    <title>Freenove - Web Flasher</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="icon" href="freenove.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.19.0/css/xterm.css">
 </head>
 <body>
     <header>
@@ -64,8 +65,31 @@
         </section>
 
         <section class="actions">
-            <button id="connect-btn" class="action-btn" disabled><i class="fas fa-link"></i> Connect</button>
-            <esp-web-install-button id="install-button" style="display: none;"></esp-web-install-button>
+            <div class="controls-grid">
+                <div class="baud-rate-selector">
+                    <label for="baud-rate-select">Baud Rate:</label>
+                    <select id="baud-rate-select">
+                        <option value="115200">115200</option>
+                        <option value="230400">230400</option>
+                        <option value="460800">460800</option>
+                        <option value="921600" selected>921600</option>
+                        <option value="1500000">1500000</option>
+                        <option value="2000000">2000000</option>
+                    </select>
+                </div>
+                <div class="erase-checkbox-container">
+                    <input type="checkbox" id="erase-flash-checkbox" name="erase-flash" checked>
+                    <label for="erase-flash-checkbox">Erase Flash</label>
+                </div>
+                <button id="connect-btn" class="action-btn" disabled><i class="fas fa-link"></i> Connect</button>
+                <button id="flash-btn" class="action-btn" disabled><i class="fas fa-bolt"></i> Flash</button>
+                <button id="toggle-console-btn" class="action-btn"><i class="fas fa-terminal"></i> Open Console</button>
+                <button id="serial-port-info-btn" class="action-btn" disabled><i class="fas fa-info-circle"></i> Serial Port Info</button>
+            </div>
+        </section>
+
+        <section class="terminal-section hidden">
+            <div id="terminal-log"></div>
         </section>
     </main>
 
@@ -101,8 +125,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Serial Port Info Modal -->
+    <div id="serial-info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Serial Port Information</h2>
+                <button id="close-serial-info-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-main">
+                <div id="serial-info-content" class="serial-info-content">
+                    <p><strong>Vendor ID:</strong> <span id="serial-vendor-id">N/A</span></p>
+                    <p><strong>Product ID:</strong> <span id="serial-product-id">N/A</span></p>
+                    <p><strong>Baud Rate:</strong> <span id="serial-baud-rate">N/A</span></p>
+                    <p><strong>Chip Name:</strong> <span id="serial-chip-name">N/A</span></p>
+                    <div class="baud-rate-selector">
+                        <label for="modal-baud-rate-select">Change Baud Rate:</label>
+                        <select id="modal-baud-rate-select">
+                            <option value="115200">115200</option>
+                            <option value="230400">230400</option>
+                            <option value="460800">460800</option>
+                            <option value="921600" selected>921600</option>
+                            <option value="1500000">1500000</option>
+                            <option value="2000000">2000000</option>
+                        </select>
+                        <button id="apply-baud-rate-btn" class="action-btn small-btn">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <script type="module" src="https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@4.19.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+    <script type="module" src="esptool-integration.js"></script>
+    <script type="module" src="script.js"></script>

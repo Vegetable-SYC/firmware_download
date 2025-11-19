@@ -1,3 +1,5 @@
+import { initESPLoader, disconnectESPLoader, startFlashing, getSerialPortInfo, setOnDisconnectCallback, getConnectedPort, consoleTerminal } from './esptool-integration.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const body = document.body;
@@ -5,8 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const firmwareSelect = document.getElementById('firmware-select');
     const versionSelect = document.getElementById('version-select');
     const connectBtn = document.getElementById('connect-btn');
-    const installButton = document.getElementById('install-button');
+    const flashBtn = document.getElementById('flash-btn');
+    const toggleConsoleBtn = document.getElementById('toggle-console-btn');
+    const serialPortInfoBtn = document.getElementById('serial-port-info-btn');
     const themeSwitcher = document.getElementById('theme-switcher');
+    const baudRateSelect = document.getElementById('baud-rate-select');
+    const terminalSection = document.querySelector('.terminal-section');
 
     // Modal Elements
     const deviceModal = document.getElementById('device-modal');
@@ -14,6 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const deviceList = document.getElementById('device-list');
     const leftArrow = document.querySelector('.left-arrow');
     const rightArrow = document.querySelector('.right-arrow');
+
+    // Serial Info Modal Elements
+    const serialInfoModal = document.getElementById('serial-info-modal');
+    const closeSerialInfoModalBtn = document.getElementById('close-serial-info-modal-btn');
+    const serialVendorId = document.getElementById('serial-vendor-id');
+    const serialProductId = document.getElementById('serial-product-id');
+    const serialBaudRateDisplay = document.getElementById('serial-baud-rate');
+    const modalBaudRateSelect = document.getElementById('modal-baud-rate-select');
+    const applyBaudRateBtn = document.getElementById('apply-baud-rate-btn');
 
     // Stepper Elements
     const step2 = document.getElementById('step-2');
@@ -24,11 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedDevice = null;
     let selectedFirmware = null;
     let selectedVersion = null;
+    let isConnected = false;
 
     // --- Functions ---
 
-    function toggleModal() {
-        deviceModal.classList.toggle('is-visible');
+    function toggleModal(modalElement) {
+        modalElement.classList.toggle('is-visible');
+        console.log(`[DEBUG] Toggling modal: ${modalElement.id}, is-visible: ${modalElement.classList.contains('is-visible')}`);
     }
     
     function renderDeviceCarousel() {
@@ -53,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleDeviceSelection(device) {
+        console.log(`[DEBUG] handleDeviceSelection called for device: ${device.name}`);
         selectedDevice = device;
         selectedFirmware = null;
         selectedVersion = null;
@@ -66,8 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
             step2.classList.add('active');
         } else {
             populateDropdown(firmwareSelect, [], 'No firmware available');
+            populateDropdown(versionSelect, [], 'Select version');
             firmwareSelect.disabled = true;
+            versionSelect.disabled = true;
             step2.classList.remove('active');
+            step3.classList.remove('active');
         }
         
         populateDropdown(versionSelect, [], 'Select version');
@@ -75,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         step3.classList.remove('active');
         
         updateButtonStates();
-        toggleModal();
+        toggleModal(deviceModal);
     }
     
     function populateDropdown(selectElement, items, placeholder) {
@@ -89,9 +110,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateButtonStates() {
+        consoleTerminal.writeLine(`[DEBUG] updateButtonStates called. isConnected: ${isConnected}, selectedDevice: ${!!selectedDevice}, selectedFirmware: ${!!selectedFirmware}, selectedVersion: ${!!selectedVersion}`);
         const canFlash = selectedDevice && selectedFirmware && selectedVersion;
-        connectBtn.disabled = !canFlash;
-        installButton.manifest = canFlash ? selectedVersion.manifest_path : '';
+        
+        // Connect/Disconnect button
+        connectBtn.disabled = !canFlash; // Disable until device, firmware, version are selected
+        if (isConnected) {
+            connectBtn.innerHTML = '<i class="fas fa-unlink"></i> Disconnect';
+        } else {
+            connectBtn.innerHTML = '<i class="fas fa-link"></i> Connect';
+        }
+
+        // Flash button
+        flashBtn.disabled = !(isConnected && canFlash);
+
+        // Serial Port Info button
+        serialPortInfoBtn.disabled = !isConnected;
+        consoleTerminal.writeLine(`[DEBUG] Flash button disabled: ${flashBtn.disabled}, Serial Port Info button disabled: ${serialPortInfoBtn.disabled}`);
     }
 
     // --- Theme Switching ---
@@ -115,10 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
-    selectDeviceBtn.addEventListener('click', toggleModal);
-    closeModalBtn.addEventListener('click', toggleModal);
+    selectDeviceBtn.addEventListener('click', () => toggleModal(deviceModal));
+    closeModalBtn.addEventListener('click', () => toggleModal(deviceModal));
     deviceModal.addEventListener('click', (e) => {
-        if (e.target === deviceModal) toggleModal();
+        if (e.target === deviceModal) toggleModal(deviceModal);
+    });
+
+    closeSerialInfoModalBtn.addEventListener('click', () => toggleModal(serialInfoModal));
+    serialInfoModal.addEventListener('click', (e) => {
+        if (e.target === serialInfoModal) toggleModal(serialInfoModal);
     });
 
     themeSwitcher.addEventListener('click', () => {
@@ -157,13 +197,104 @@ document.addEventListener('DOMContentLoaded', () => {
         updateButtonStates();
     });
 
-    connectBtn.addEventListener('click', () => {
-        const activateButton = installButton.shadowRoot?.querySelector('button');
-        if (activateButton) {
-            activateButton.click();
+    connectBtn.addEventListener('click', async () => {
+        const selectedBaudRate = parseInt(baudRateSelect.value);
+        if (!isConnected) {
+            // Connect phase
+            connectBtn.disabled = true;
+            connectBtn.textContent = 'Connecting...';
+            try {
+                await initESPLoader(selectedBaudRate);
+                isConnected = true;
+                // Set up disconnect listener
+                const port = getConnectedPort();
+                if (port) {
+                    port.onDisconnection = () => { // Corrected event name
+                        consoleTerminal.writeLine("设备已断开连接。");
+                        isConnected = false;
+                        updateButtonStates();
+                    };
+                }
+                consoleTerminal.writeLine("设备已连接。");
+            } catch (error) {
+                console.error("连接失败:", error);
+                consoleTerminal.writeLine("连接失败: " + error.message);
+                isConnected = false;
+            } finally {
+                connectBtn.disabled = false;
+                updateButtonStates();
+            }
         } else {
-            console.error('Could not find the activate button in esp-web-tools component.');
-            alert('Error: Flashing component is not ready.');
+            // Disconnect phase
+            connectBtn.disabled = true;
+            connectBtn.textContent = 'Disconnecting...';
+            try {
+                await disconnectESPLoader();
+                isConnected = false;
+                consoleTerminal.writeLine("设备已断开连接。");
+            } catch (error) {
+                console.error("断开连接失败:", error);
+                consoleTerminal.writeLine("断开连接失败: " + error.message);
+            } finally {
+                connectBtn.disabled = false;
+                updateButtonStates();
+            }
+        }
+    });
+
+    flashBtn.addEventListener('click', async () => {
+        flashBtn.disabled = true;
+        flashBtn.textContent = 'Flashing...';
+        const eraseFlashCheckbox = document.getElementById('erase-flash-checkbox');
+        const shouldEraseFlash = eraseFlashCheckbox ? eraseFlashCheckbox.checked : false; // Get checkbox state
+
+        try {
+            await startFlashing(selectedVersion, shouldEraseFlash); // Pass the state
+            consoleTerminal.writeLine("烧录成功！");
+            isConnected = true; // Keep connected after flashing
+        } catch (error) {
+            console.error("烧录失败:", error);
+            consoleTerminal.writeLine("烧录失败: " + error.message);
+        } finally {
+            flashBtn.disabled = false;
+            updateButtonStates();
+        }
+    });
+
+    toggleConsoleBtn.addEventListener('click', () => {
+        terminalSection.classList.toggle('hidden');
+        if (terminalSection.classList.contains('hidden')) {
+            toggleConsoleBtn.innerHTML = '<i class="fas fa-terminal"></i> Open Console';
+        } else {
+            toggleConsoleBtn.innerHTML = '<i class="fas fa-terminal"></i> Close Console';
+        }
+    });
+
+    serialPortInfoBtn.addEventListener('click', async () => {
+        if (!isConnected) return;
+        const info = await getSerialPortInfo();
+        if (info) {
+            serialVendorId.textContent = info.usbVendorId || 'N/A';
+            serialProductId.textContent = info.usbProductId || 'N/A';
+            serialBaudRateDisplay.textContent = info.baudRate || 'N/A';
+            modalBaudRateSelect.value = info.baudRate || '921600';
+            toggleModal(serialInfoModal);
+        } else {
+            consoleTerminal.writeLine("无法获取串口信息。");
+        }
+    });
+
+    applyBaudRateBtn.addEventListener('click', async () => {
+        const newBaudRate = parseInt(modalBaudRateSelect.value);
+        if (isConnected && newBaudRate) {
+            try {
+                await changeBaudRate(newBaudRate);
+                serialBaudRateDisplay.textContent = newBaudRate;
+                consoleTerminal.writeLine(`波特率已更改为 ${newBaudRate}`);
+            } catch (error) {
+                console.error("更改波特率失败:", error);
+                consoleTerminal.writeLine("更改波特率失败: " + error.message);
+            }
         }
     });
 
@@ -171,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Main initialization function.
      */
     async function initializeApp() {
-        loadTheme(); // Load theme first
+        loadTheme();
         try {
             const response = await fetch('firmware/config.json');
             if (!response.ok) {
@@ -179,13 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             appConfig = await response.json();
             renderDeviceCarousel();
+            updateButtonStates();
         } catch (error) {
             console.error('Failed to load or parse firmware/config.json:', error);
-            alert('Fatal Error: Could not load device configuration. Please check the console.');
+            consoleTerminal.writeLine('Fatal Error: Could not load device configuration. Please check the console.');
         }
     }
 
     // --- Initialization ---
     initializeApp();
 });
-
