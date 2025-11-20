@@ -63,6 +63,17 @@
             }
           ]
         }
+		{
+          "id": "ESP32-2432S024",
+          "name": "ESP32-2432S024",
+          "versions": [
+            {
+              "id": "v1.0",
+              "name": "v1.0",
+              "manifest_path": "firmware/FNK0103/ESP32-2432S0284/v1.0/v1.0.0.json"
+            }
+          ]
+        }
       ]
     }
   ]
