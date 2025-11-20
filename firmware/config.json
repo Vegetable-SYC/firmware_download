@@ -48,7 +48,18 @@
             {
               "id": "v1.0",
               "name": "v1.0",
-              "manifest_path": "firmware/FNK0103/firmwares/v1.0/v1.0.0.json"
+              "manifest_path": "firmware/FNK0103/WS2812/v1.0/v1.0.0.json"
+            }
+          ]
+        },
+		{
+          "id": "ESP32-2432S028",
+          "name": "ESP32-2432S028",
+          "versions": [
+            {
+              "id": "v1.0",
+              "name": "v1.0",
+              "manifest_path": "firmware/FNK0103/ESP32-2432S028/v1.0/v1.0.0.json"
             }
           ]
         }
