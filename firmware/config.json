@@ -52,7 +52,7 @@
             }
           ]
         },
-		{
+        {
           "id": "ESP32-2432S028",
           "name": "ESP32-2432S028",
           "versions": [
@@ -63,7 +63,7 @@
             }
           ]
         },
-		{
+        {
           "id": "ESP32-2432S024",
           "name": "ESP32-2432S024",
           "versions": [
@@ -71,6 +71,42 @@
               "id": "v1.0",
               "name": "v1.0",
               "manifest_path": "firmware/FNK0103/ESP32-2432S0284/v1.0/v1.0.0.json"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "FNK0104",
+      "name": "FNK0104",
+      "image": "firmware/FNK0104/FNK0104.png",
+      "firmwares": [
+        {
+          "id": "ESP32S3_240_320_28",
+          "name": "ESP32S3_240_320_28",
+          "versions": [
+            {
+              "id": "V1.8.3",
+              "name": "V1.8.3",
+              "manifest_path": "firmware/FNK0104/firmwares/V1.8.3/V1.8.3.json"
+            }
+          ]
+        }
+      ]
+    },
+	{
+      "id": "FNK0086",
+      "name": "FNK0086",
+      "image": "firmware/FNK0086/FNK0086.png",
+      "firmwares": [
+        {
+          "id": "ESP32S3_240_320_28",
+          "name": "ESP32S3_240_320_28",
+          "versions": [
+            {
+              "id": "V1.8.3",
+              "name": "V1.8.3",
+              "manifest_path": "firmware/FNK0086/firmwares/V1.8.3/V1.8.3.json"
             }
           ]
         }
