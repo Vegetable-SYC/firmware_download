@@ -42,35 +42,57 @@
       "image": "firmware/FNK0103/FNK0103.png",
       "firmwares": [
         {
-          "id": "WS2812",
-          "name": "WS2812",
+          "id": "103B",
+          "name": "NerdMiner-FNK0103B (2.8\" ST7789 TN)",
           "versions": [
             {
-              "id": "v1.0",
-              "name": "v1.0",
-              "manifest_path": "firmware/FNK0103/WS2812/v1.0/v1.0.0.json"
+              "id": "v1.8.3",
+              "name": "v1.8.3",
+              "manifest_path": "firmware/FNK0103/103B/v1.8.3/v1.8.3.json"
             }
           ]
         },
         {
-          "id": "ESP32-2432S028",
-          "name": "ESP32-2432S028",
+          "id": "103F",
+          "name": "NerdMiner-FNK0103F (2.8\" ILI9341 TN)",
           "versions": [
             {
-              "id": "v1.0",
-              "name": "v1.0",
-              "manifest_path": "firmware/FNK0103/ESP32-2432S028/v1.0/v1.0.0.json"
+              "id": "v1.8.3",
+              "name": "v1.8.3",
+              "manifest_path": "firmware/FNK0103/103F/v1.8.3/v1.8.3.json"
             }
           ]
         },
-        {
-          "id": "ESP32-2432S024",
-          "name": "ESP32-2432S024",
+		{
+          "id": "103L",
+          "name": "NerdMiner-FNK0103L (3.2\" ST7789 IPS)",
           "versions": [
             {
-              "id": "v1.0",
-              "name": "v1.0",
-              "manifest_path": "firmware/FNK0103/ESP32-2432S0284/v1.0/v1.0.0.json"
+              "id": "v1.8.3",
+              "name": "v1.8.3",
+              "manifest_path": "firmware/FNK0103/103L/v1.8.3/v1.8.3.json"
+            }
+          ]
+        },
+		{
+          "id": "103N",
+          "name": "NerdMiner-FNK0103N (3.5\" ST7796 IPS)",
+          "versions": [
+            {
+              "id": "v1.8.3",
+              "name": "v1.8.3",
+              "manifest_path": "firmware/FNK0103/103N/v1.8.3/v1.8.3.json"
+            }
+          ]
+        },
+		{
+          "id": "103S",
+          "name": "NerdMiner-FNK0103S (4.0\" ST7796 TN)",
+          "versions": [
+            {
+              "id": "v1.8.3",
+              "name": "v1.8.3",
+              "manifest_path": "firmware/FNK0103/103S/v1.8.3/v1.8.3.json"
             }
           ]
         }
