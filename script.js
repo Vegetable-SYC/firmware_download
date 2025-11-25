@@ -451,7 +451,35 @@ document.addEventListener('DOMContentLoaded', () => {
             consoleTerminal.writeLine('Fatal Error: Could not load device configuration. Please check the console.'); // 向控制台输出致命错误信息
         }
     }
+	
+	// --- 功能说明悬浮组件逻辑 ---
+	const infoWidget = document.getElementById('info-widget');
+	const infoTriggerBtn = document.getElementById('info-trigger-btn');
+	const infoCloseBtn = document.getElementById('info-close-btn');
+
+	if (infoWidget && infoTriggerBtn && infoCloseBtn) {
+		// 点击圆形按钮展开
+		infoTriggerBtn.addEventListener('click', () => {
+			infoWidget.classList.add('expanded');
+		});
+
+		// 点击关闭按钮收起
+		infoCloseBtn.addEventListener('click', () => {
+			infoWidget.classList.remove('expanded');
+		});
+
+		// (可选) 点击卡片外部区域也可以收起，如果需要的话可以启用下面这段
+		/*
+		document.addEventListener('click', (e) => {
+			if (infoWidget.classList.contains('expanded') && 
+				!infoWidget.contains(e.target)) {
+				infoWidget.classList.remove('expanded');
+			}
+		});
+		*/
+	}
 
     // --- 应用程序初始化 ---
     initializeApp(); // 调用主初始化函数
 });
+

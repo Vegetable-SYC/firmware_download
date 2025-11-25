@@ -72,7 +72,7 @@ header {
 }
 
 .hero {
-    margin-top: 4rem; /* 顶部外边距 */
+    margin-top: 0rem; /* 顶部外边距 */
 }
 
 .logo {
@@ -138,7 +138,7 @@ nav {
     font-size: 1.25rem; /* 字体大小 */
     color: var(--secondary-text-color); /* 文本颜色 */
     max-width: 600px; /* 最大宽度 */
-    margin: 1rem auto 8rem; /* 外边距 */
+    margin: 1rem auto 4rem; /* 外边距 */
     line-height: 1.6; /* 行高 */
 }
 
@@ -147,7 +147,7 @@ nav {
     display: flex; /* 使用Flex布局 */
     flex-direction: row; /* 水平方向排列子元素 */
     gap: 10rem; /* 子元素间距 */
-    margin: 8rem 0; /* 上下外边距 */
+    margin: 4rem 0; /* 上下外边距 */
     justify-content: center; /* 子元素水平居中 */
     animation: fadeInUp 0.8s ease-out forwards; /* 动画效果 */
     opacity: 0; /* 初始透明度 */
@@ -559,6 +559,17 @@ footer {
     transform: translateY(-3px); /* 悬停上移效果 */
 }
 
+.footer-link {
+    color: var(--secondary-text-color); /* 默认颜色与页脚文字一致 */
+    text-decoration: none; /* 去掉下划线 */
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: var(--primary-text-color); /* 悬停时变亮 */
+    text-decoration: underline; /* 悬停时加下划线，强调它是链接 */
+}
+
 
 /* --- 动画与辅助工具 --- */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } /* 淡入动画 */
@@ -646,4 +657,132 @@ body:not(.light-mode) .serial-monitor-terminal {
 .serial-monitor-terminal canvas {
     height: 100% !important;
     width: 100% !important;
+}
+
+/* --- 功能说明悬浮组件样式 --- */
+.info-widget {
+    position: fixed;
+    bottom: 80%;
+    right: 2rem;
+    z-index: 900; /* 略低于模态框，但高于页面内容 */
+    font-family: var(--font-main);
+}
+
+/* --- 状态1：圆形按钮 --- */
+.info-trigger-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--primary-accent-color);
+    color: var(--background-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弹性动画 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 鼠标悬浮动画 */
+.info-trigger-btn:hover {
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    background-color: var(--primary-accent-hover);
+}
+
+/* 适配浅色模式的文字颜色 */
+body.light-mode .info-trigger-btn {
+    color: var(--background-color);
+}
+
+/* --- 状态2：展开的卡片 --- */
+.info-card {
+    position: absolute;
+    top: 0;
+    bottom: auto;
+    right: 0;
+    width: 320px; /* 卡片宽度 */
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    
+    /* 初始状态：隐藏且缩小 */
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0);
+    transform-origin: top right; /* 从右下角放大 */
+    transition: all 0.3s ease;
+}
+
+.info-header {
+    background-color: var(--background-color);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--primary-text-color);
+}
+
+.info-close-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.info-close-btn:hover {
+    color: var(--primary-text-color);
+}
+
+.info-body {
+    padding: 1.5rem;
+    color: var(--primary-text-color);
+    text-align: left;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.info-body p {
+    margin-bottom: 0.8rem;
+}
+
+.info-body p:last-child {
+    margin-bottom: 0;
+}
+
+.info-body .note {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    margin-top: 1rem;
+    font-style: italic;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.5rem;
+}
+
+/* --- 交互状态类 --- */
+/* 当组件处于“展开”状态时 */
+.info-widget.expanded .info-trigger-btn {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.5); /* 缩小消失 */
+}
+
+.info-widget.expanded .info-card {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1); /* 恢复原大小 */
 }

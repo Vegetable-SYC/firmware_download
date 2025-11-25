@@ -1,7 +1,7 @@
 <!-- 
-作者：Eason-swc
-版本：v1.0
-日期：2025/11/19
+    作者：Eason-swc
+    版本：v1.0
+    日期：2025/11/19
 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -30,9 +30,9 @@
         <div class="header-right">
             <!-- 导航菜单 -->
             <nav>
-                <a href="#" class="nav-button">Get Started</a>
-                <a href="#" class="nav-button">Features</a>
-                <a href="#" class="nav-button">Shop</a>
+                <a href="https://freenove.com/" class="nav-button" target="_blank">Home</a>
+                <a href="https://freenove.com/store" class="nav-button" target="_blank">Store</a>
+                <a href="https://freenove.com/support" class="nav-button" target="_blank">Support</a>
             </nav>
             <!-- 主题切换器，用于切换深色/浅色模式 -->
             <div id="theme-switcher" class="theme-switcher">
@@ -127,6 +127,8 @@
         <!-- 版权信息 -->
         <div class="footer-copyright">
             © 2025 Freenove
+            <span style="margin: 0 0.5rem; opacity: 0.5;">|</span>
+            Powered by <a href="https://github.com/espressif/esptool-js" target="_blank" class="footer-link">esptool-js</a>
         </div>
         <!-- 社交媒体链接 -->
         <div class="footer-socials">
@@ -136,6 +138,27 @@
             <a href="https://www.youtube.com/@Freenove" target="_blank" aria-label="YouTube">
                 <i class="fab fa-youtube"></i>
             </a>
+        </div>
+        <!-- 功能说明悬浮组件 -->
+        <div id="info-widget" class="info-widget">
+            <!-- 状态1：圆形触发按钮 -->
+            <button id="info-trigger-btn" class="info-trigger-btn" aria-label="Help & Instructions">
+                <i class="fas fa-question"></i>
+            </button>
+
+            <!-- 状态2：展开的文本框 -->
+            <div class="info-card">
+                <div class="info-header">
+                    <h3>How to use</h3>
+                    <button id="info-close-btn" class="info-close-btn">&times;</button>
+                </div>
+                <div class="info-body">
+                    <p><strong>1. Select Device:</strong> Choose your board model from the list.</p>
+                    <p><strong>2. Connect:</strong> Click "Connect" and select the USB port.</p>
+                    <p><strong>3. Flash:</strong> Pick the firmware version and click "Flash".</p>
+                    <p class="note">Note: Ensure your device is in bootloader mode if connecting fails.</p>
+                </div>
+            </div>
         </div>
     </footer>
 
